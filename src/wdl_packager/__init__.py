@@ -23,7 +23,8 @@ import argparse
 
 def argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("wdl", metavar="WDL_FILE")
+    parser.add_argument("wdl", metavar="WDL_FILE",
+                        help="The WDL file that will be packaged.")
     return parser
 
 
