@@ -19,12 +19,19 @@
 # SOFTWARE.
 
 import argparse
+import zipfile
+from pathlib import Path
+
+import WDL
 
 
 def argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("wdl", metavar="WDL_FILE",
                         help="The WDL file that will be packaged.")
+    parser.add_argument("-o", "--output", required=False,
+                        help="The output zip file. By default uses the name "
+                             "of the input")
     return parser
 
 
