@@ -88,18 +88,26 @@ def wdl_paths(wdl: WDL.Tree.Document,
     # Make sure the list only contains unique entries. Some WDL files import
     # the same wdl file and this wdl file will end up in the list multiple
     # times because of that. This needs to be corrected.
-    resolved_unique_paths = set()
+    unique_paths = set()
     unique_path_list = []
-    for abspath, relpath in path_list:
-        # We need to resolve the path. Some paths have bla/../bla.wdl these
-        # .. paths are removed by resolving. (The resolved path does not make
-        # sense as it is resolved relative to pwd but that does not matter,
-        # since we use it for uniqueness only.
-        resolved_path = relpath.resolve()
-        if resolved_path in resolved_unique_paths:
+    for abspath, relpath in path_list:  # type: Path, Path
+        if ".." in relpath.parts:
+            # If .. is in the path we have a problem. This can be fixed by
+            # resolving it. Since resolving is done relative to CWD and creates
+            # an absolute path we need to use relative_to to get back to a
+            # relative path.
+            try:
+                resolved_relpath = relpath.resolve().relative_to(
+                    Path(os.getcwd()))
+            except ValueError:
+                # Resolve hack did not work
+                raise ValueError(f"'..' was found in the import path "
+                                 f"{relpath} and could not be resolved.")
+            relpath = resolved_relpath
+        if relpath in unique_paths:
             continue
         else:
-            resolved_unique_paths.add(resolved_path)
+            unique_paths.add(relpath)
             unique_path_list.append((abspath, relpath))
 
     return unique_path_list
