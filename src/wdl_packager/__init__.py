@@ -51,17 +51,20 @@ def get_protocol(uri: str) -> Optional[str]:
 
 
 def wdl_paths(wdl: WDL.Tree.Document,
-              start_path: Path = Path()
-              ) -> List[Tuple[Path, Path]]:
+              start_path: Path = Path(),
+              unique = True) -> List[Tuple[Path, Path]]:
     """
-    A generator that yields tuples with an absolute file path and the
-    relative imports path.
+    Return a list of all WDL files that are imported. The list contains
+    tuples of absolute path on the filesystem and relative paths from the
+    URI of the first WDL document.
     :param wdl: The WDL document
     :param start_path: relative path to start from.
-    :param relative_to_path:
-    :returns
+    :param unique: Only return unique paths
+    :return: A list of tuple(abspath, relpath)
     """
     path_list = []
+
+    # Only file protocol is supported
     protocol = get_protocol(wdl.pos.uri)
     if protocol == "file":
         uri = wdl.pos.uri.lstrip("file://")
@@ -71,22 +74,33 @@ def wdl_paths(wdl: WDL.Tree.Document,
         raise NotImplementedError(f"{protocol} is not implemented yet")
 
     wdl_path = start_path / Path(uri)
-
     path_list.append((Path(wdl.pos.abspath), wdl_path))
 
+    # Recursively use the function for imports as well.
     import_start_path = wdl_path.parent
-    for wdl_import in wdl.imports:  # type: WDL.Tree.DocImport
-        wdl_doc = wdl_import.doc  # type: WDL.Tree.Document
-        path_list.extend(wdl_paths(wdl_doc, import_start_path))
+    for wdl_import in wdl.imports:
+        path_list.extend(
+            # Uniqueness checking not done for each recursion
+            wdl_paths(wdl_import.doc, import_start_path, unique=False))
 
-    relpath_set = set()
+    if not unique:
+        return path_list
+
+    # Make sure the list only contains unique entries. Some WDL files import
+    # the same wdl file and this wdl file will end up in the list multiple
+    # times because of that. This needs to be corrected.
+    resolved_unique_paths = set()
     unique_path_list = []
     for abspath, relpath in path_list:
+        # We need to resolve the path. Some paths have bla/../bla.wdl these
+        # .. paths are removed by resolving. (The resolved path does not make
+        # sense as it is resolved relative to pwd but that does not matter,
+        # since we use it for uniqueness only.
         resolved_path = relpath.resolve()
-        if resolved_path in relpath_set:
+        if resolved_path in resolved_unique_paths:
             continue
         else:
-            relpath_set.add(resolved_path)
+            resolved_unique_paths.add(resolved_path)
             unique_path_list.append((abspath, relpath))
 
     return unique_path_list
@@ -96,7 +110,8 @@ def main():
     args = argument_parser().parse_args()
     wdl_path = Path(args.wdl)
     wdl_doc = WDL.load(args.wdl)
-    # Create the by default package /bla/bla/my_workflow.wdl into my_workflow.zip
+    # Create the by default package /bla/bla/my_workflow.wdl into
+    # my_workflow.zip
     output_path = args.output or wdl_path.stem + ".zip"
     with zipfile.ZipFile(output_path, "w") as archive:
         for abspath, relpath in wdl_paths(wdl_doc):
