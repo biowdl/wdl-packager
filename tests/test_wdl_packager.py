@@ -21,11 +21,11 @@
 import os
 from pathlib import Path
 
+import WDL
+
 import pytest
 
 from wdl_packager import get_protocol, wdl_paths
-
-import WDL
 
 TEST_DATA_DIR = Path(Path(__file__).parent) / Path("data")
 PROTOCOL_TEST = [
@@ -42,7 +42,8 @@ def test_get_protocol(uri, result):
 
 
 def test_wdl_paths():
-    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling") / Path("gatk-variantcalling.wdl")
+    wdl_file = (TEST_DATA_DIR / Path("gatk-variantcalling") /
+                Path("gatk-variantcalling.wdl"))
     os.chdir(wdl_file.parent)
     wdl_doc = WDL.load(wdl_file.name)
     relpaths = set(relpath for abspath, relpath in wdl_paths(wdl_doc))
@@ -55,3 +56,13 @@ def test_wdl_paths():
         Path("tasks/picard.wdl"),
         Path("tasks/samtools.wdl")
     }
+
+
+def test_wdl_paths_unresolvable():
+    wdl_file = (TEST_DATA_DIR / Path("gatk-variantcalling") / Path("tasks") /
+                Path("biopet") / Path("biopet.wdl"))
+    os.chdir(wdl_file.parent)
+    wdl_doc = WDL.load(wdl_file.name)
+    with pytest.raises(ValueError) as e:
+        wdl_paths(wdl_doc)
+    assert e.match("../common.wdl")
