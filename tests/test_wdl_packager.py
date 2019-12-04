@@ -25,8 +25,7 @@ import WDL
 
 import pytest
 
-from wdl_packager import get_protocol, wdl_paths
-
+from wdl_packager import get_protocol, resolve_double_dots_in_uri, wdl_paths
 TEST_DATA_DIR = Path(Path(__file__).parent, "data")
 PROTOCOL_TEST = [
     ("/bla/bla/bladiebla", None),
@@ -66,3 +65,29 @@ def test_wdl_paths_unresolvable():
     with pytest.raises(ValueError) as e:
         wdl_paths(wdl_doc)
     assert e.match("../common.wdl")
+
+
+DOTTED_URIS = [
+    (Path("bla/../bla"), Path("bla")),
+    (Path("/bla/../../../usr/lib"), Path("/usr/lib")),
+    (Path("my_wdl/tasks/biopet/../common.wdl"), Path("my_wdl/tasks/common.wdl")),
+    (Path("multiple/../dots/../detected"), Path("detected")),
+]
+
+UNRESOLVABLE_DOTTED_URIS = [
+     Path("../my_import.wdl"),
+     Path("tasks/../../my_import.wdl"),
+     Path("seemingly/fine/../but/../too/many/dots/../../../../../indeed")
+]
+
+
+@pytest.mark.parametrize(["uri", "result"], DOTTED_URIS)
+def test_resolve_double_dots_in_uri(uri, result):
+    assert resolve_double_dots_in_uri(uri) == result
+
+
+@pytest.mark.parametrize("uri", UNRESOLVABLE_DOTTED_URIS)
+def test_resolve_double_dots_in_uri(uri):
+    with pytest.raises(ValueError) as e:
+        resolve_double_dots_in_uri(uri)
+    assert e.match("unknown parent")
