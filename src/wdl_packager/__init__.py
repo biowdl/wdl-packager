@@ -49,6 +49,26 @@ def get_protocol(uri: str) -> Optional[str]:
         return None
 
 
+def resolve_double_dots_in_uri(path: Path):
+    """
+    Path.resolve() uses CWD on relative paths. But this is not desirable
+    for uris
+    """
+    if path.is_absolute():  # resolve works fine in this case.
+        return path.resolve()
+    if ".." in path.parts:
+        index = path.parts.index("..")
+        if index == 0:
+            raise ValueError(f"unknown parent for {path}")
+        else:
+            # Slice out the double dot and its parent.
+            new_parts = path.parts[:index - 1] + path.parts[index + 1:]
+            # Recursion which allows for checking multiple ".." parts.
+            return resolve_double_dots_in_uri(Path(*new_parts))
+    else:
+        return path
+
+
 def wdl_paths(wdl: WDL.Tree.Document,
               start_path: Path = Path(),
               unique: bool = True) -> List[Tuple[Path, Path]]:
