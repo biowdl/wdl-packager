@@ -54,13 +54,13 @@ def wdl_paths(wdl: WDL.Tree.Document,
     else:
         raise NotImplementedError(f"{protocol} is not implemented yet")
 
-    rel_path = start_path / (Path(uri).relative_to(relative_to_path))
-    yield Path(wdl.pos.abspath), rel_path
+    wdl_path = (start_path / (Path(uri)))
+    yield Path(wdl.pos.abspath), wdl_path.relative_to(relative_to_path)
 
-    import_start_path = rel_path.parent
+    import_start_path = wdl_path.parent
     for wdl_import in wdl.imports:  # type: WDL.Tree.DocImport
         wdl_doc = wdl_import.doc  # type: WDL.Tree.Document
-        for file_path, rel_path in wdl_paths(wdl_doc, import_start_path):
+        for file_path, rel_path in wdl_paths(wdl_doc, import_start_path, relative_to_path):
             yield file_path, rel_path
 
 
