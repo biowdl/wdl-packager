@@ -43,15 +43,23 @@ def get_protocol(uri: str) -> Optional[str]:
         return None
 
 
-def wdl_paths(wdl: WDL.Tree.Document, start_path= Path()) -> Generator[Tuple[Path, Path], None, None]:
+def wdl_paths(wdl: WDL.Tree.Document) -> Generator[Tuple[Path, Path], None, None]:
     protocol = get_protocol(wdl.pos.uri)
     if protocol == "file":
-        uri = wdl.pos.uri.lstrip("file://")
+        file_path = Path(wdl.pos.uri.lstrip("file://"))
     elif protocol is None:
-        uri = wdl.pos.uri
+        file_path = Path(wdl.pos.uri)
     else:
         raise NotImplementedError(f"{protocol} is not implemented yet")
-    rel_path = start_path / Path(uri).name
+    rel_path = file_path.name
+    yield file_path, rel_path
+
+    for wdl_import in wdl.imports:  # type: WDL.Tree.DocImport
+        wdl_doc = wdl_import.doc
+        for file_path, rel_path in wdl_paths(wdl_doc):
+            yield file_path, rel_path
+
+
 def main():
     args = argument_parser().parse_args()
     wdl = WDL.load(args.wdl)
