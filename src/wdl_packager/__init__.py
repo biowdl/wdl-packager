@@ -19,11 +19,10 @@
 # SOFTWARE.
 
 import argparse
+import os
 import zipfile
 from pathlib import Path
 from typing import List, Optional, Tuple
-
-import os
 
 import WDL
 
@@ -52,7 +51,7 @@ def get_protocol(uri: str) -> Optional[str]:
 
 def wdl_paths(wdl: WDL.Tree.Document,
               start_path: Path = Path(),
-              unique = True) -> List[Tuple[Path, Path]]:
+              unique: bool = True) -> List[Tuple[Path, Path]]:
     """
     Return a list of all WDL files that are imported. The list contains
     tuples of absolute path on the filesystem and relative paths from the
@@ -133,4 +132,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
