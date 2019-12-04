@@ -27,7 +27,7 @@ import pytest
 
 from wdl_packager import get_protocol, wdl_paths
 
-TEST_DATA_DIR = Path(Path(__file__).parent) / Path("data")
+TEST_DATA_DIR = Path(Path(__file__).parent, "data")
 PROTOCOL_TEST = [
     ("/bla/bla/bladiebla", None),
     ("http://github.com", "http"),
@@ -42,8 +42,8 @@ def test_get_protocol(uri, result):
 
 
 def test_wdl_paths():
-    wdl_file = (TEST_DATA_DIR / Path("gatk-variantcalling") /
-                Path("gatk-variantcalling.wdl"))
+    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
+                                    "gatk-variantcalling.wdl")
     os.chdir(wdl_file.parent)
     wdl_doc = WDL.load(wdl_file.name)
     relpaths = set(relpath for abspath, relpath in wdl_paths(wdl_doc))
@@ -59,8 +59,8 @@ def test_wdl_paths():
 
 
 def test_wdl_paths_unresolvable():
-    wdl_file = (TEST_DATA_DIR / Path("gatk-variantcalling") / Path("tasks") /
-                Path("biopet") / Path("biopet.wdl"))
+    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling", "tasks", "biopet",
+                                    "biopet.wdl")
     os.chdir(wdl_file.parent)
     wdl_doc = WDL.load(wdl_file.name)
     with pytest.raises(ValueError) as e:
