@@ -37,6 +37,11 @@ def argument_parser() -> argparse.ArgumentParser:
 
 
 def get_protocol(uri: str) -> Optional[str]:
+    """
+    Get protocol from a uri by splitting on the :// part.
+    :param uri: The uri
+    :return: The protocol (if any) else None
+    """
     if "://" in uri:
         return uri.split("://")[0]
     else:
@@ -45,7 +50,16 @@ def get_protocol(uri: str) -> Optional[str]:
 
 def wdl_paths(wdl: WDL.Tree.Document,
               start_path: Path = Path(),
-              relative_to_path: Path = Path()) -> Generator[Tuple[Path, Path], None, None]:
+              relative_to_path: Path = Path()
+              ) -> Generator[Tuple[Path, Path], None, None]:
+    """
+    A generator that yields tuples with an absolute file path and the
+    relative imports path.
+    :param wdl: The WDL document
+    :param start_path: relative path to start from.
+    :param relative_to_path:
+    :returns
+    """
     protocol = get_protocol(wdl.pos.uri)
     if protocol == "file":
         uri = wdl.pos.uri.lstrip("file://")
@@ -54,13 +68,13 @@ def wdl_paths(wdl: WDL.Tree.Document,
     else:
         raise NotImplementedError(f"{protocol} is not implemented yet")
 
-    wdl_path = (start_path / (Path(uri)))
-    yield Path(wdl.pos.abspath), wdl_path.relative_to(relative_to_path)
+    wdl_path = (start_path / (Path(uri))).relative_to(relative_to_path)
+    yield Path(wdl.pos.abspath), wdl_path
 
     import_start_path = wdl_path.parent
     for wdl_import in wdl.imports:  # type: WDL.Tree.DocImport
         wdl_doc = wdl_import.doc  # type: WDL.Tree.Document
-        for file_path, rel_path in wdl_paths(wdl_doc, import_start_path, relative_to_path):
+        for file_path, rel_path in wdl_paths(wdl_doc, import_start_path):
             yield file_path, rel_path
 
 
