@@ -80,8 +80,16 @@ def wdl_paths(wdl: WDL.Tree.Document,
 
 def main():
     args = argument_parser().parse_args()
-    wdl = WDL.load(args.wdl)
-    print(wdl)
+    wdl_path = Path(args.wdl)
+    wdl_doc = WDL.load(args.wdl)
+    # Create the by default package my_workflow.wdl into my_workflow.zip
+    output_path = args.output or str(wdl_path.with_suffix(".zip"))
+    with zipfile.ZipFile(output_path, "w") as archive:
+        for abspath, relpath in wdl_paths(wdl_doc,
+                                          relative_to_path=wdl_path.parent):
+            archive.write(str(abspath), str(relpath))
+    archive.testzip()
+
 
 if __name__ == "__main__":
     main()
