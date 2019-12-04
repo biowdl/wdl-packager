@@ -1,3 +1,6 @@
 [submodule "tests/data/germline-dna"]
 	path = tests/data/germline-dna
 	url = https://github.com/biowdl/germline-dna.git
+[submodule "tests/data/gatk-variantcalling"]
+	path = tests/data/gatk-variantcalling
+	url = https://github.com/biowdl/gatk-variantcalling.git
