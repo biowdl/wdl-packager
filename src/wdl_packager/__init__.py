@@ -23,6 +23,8 @@ import zipfile
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+import os
+
 import WDL
 
 
@@ -49,8 +51,7 @@ def get_protocol(uri: str) -> Optional[str]:
 
 
 def wdl_paths(wdl: WDL.Tree.Document,
-              start_path: Path = Path(),
-              relative_to_path: Path = Path()
+              start_path: Path = Path()
               ) -> List[Tuple[Path, Path]]:
     """
     A generator that yields tuples with an absolute file path and the
@@ -69,7 +70,8 @@ def wdl_paths(wdl: WDL.Tree.Document,
     else:
         raise NotImplementedError(f"{protocol} is not implemented yet")
 
-    wdl_path = (start_path / (Path(uri))).relative_to(relative_to_path)
+    wdl_path = start_path / Path(uri)
+
     path_list.append((Path(wdl.pos.abspath), wdl_path))
 
     import_start_path = wdl_path.parent
@@ -97,8 +99,7 @@ def main():
     # Create the by default package /bla/bla/my_workflow.wdl into my_workflow.zip
     output_path = args.output or wdl_path.stem + ".zip"
     with zipfile.ZipFile(output_path, "w") as archive:
-        for abspath, relpath in wdl_paths(wdl_doc,
-                                          relative_to_path=wdl_path.parent):
+        for abspath, relpath in wdl_paths(wdl_doc):
             archive.write(str(abspath), str(relpath))
 
 
