@@ -21,7 +21,7 @@
 import argparse
 import zipfile
 from pathlib import Path
-from typing import Generator, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import WDL
 
@@ -51,7 +51,7 @@ def get_protocol(uri: str) -> Optional[str]:
 def wdl_paths(wdl: WDL.Tree.Document,
               start_path: Path = Path(),
               relative_to_path: Path = Path()
-              ) -> Generator[Tuple[Path, Path], None, None]:
+              ) -> List[Tuple[Path, Path]]:
     """
     A generator that yields tuples with an absolute file path and the
     relative imports path.
@@ -60,6 +60,7 @@ def wdl_paths(wdl: WDL.Tree.Document,
     :param relative_to_path:
     :returns
     """
+    path_list = []
     protocol = get_protocol(wdl.pos.uri)
     if protocol == "file":
         uri = wdl.pos.uri.lstrip("file://")
@@ -69,26 +70,36 @@ def wdl_paths(wdl: WDL.Tree.Document,
         raise NotImplementedError(f"{protocol} is not implemented yet")
 
     wdl_path = (start_path / (Path(uri))).relative_to(relative_to_path)
-    yield Path(wdl.pos.abspath), wdl_path
+    path_list.append((Path(wdl.pos.abspath), wdl_path))
 
     import_start_path = wdl_path.parent
     for wdl_import in wdl.imports:  # type: WDL.Tree.DocImport
         wdl_doc = wdl_import.doc  # type: WDL.Tree.Document
-        for file_path, rel_path in wdl_paths(wdl_doc, import_start_path):
-            yield file_path, rel_path
+        path_list.extend(wdl_paths(wdl_doc, import_start_path))
+
+    relpath_set = set()
+    unique_path_list = []
+    for abspath, relpath in path_list:
+        resolved_path = relpath.resolve()
+        if resolved_path in relpath_set:
+            continue
+        else:
+            relpath_set.add(resolved_path)
+            unique_path_list.append((abspath, relpath))
+
+    return unique_path_list
 
 
 def main():
     args = argument_parser().parse_args()
     wdl_path = Path(args.wdl)
     wdl_doc = WDL.load(args.wdl)
-    # Create the by default package my_workflow.wdl into my_workflow.zip
-    output_path = args.output or str(wdl_path.with_suffix(".zip"))
+    # Create the by default package /bla/bla/my_workflow.wdl into my_workflow.zip
+    output_path = args.output or wdl_path.stem + ".zip"
     with zipfile.ZipFile(output_path, "w") as archive:
         for abspath, relpath in wdl_paths(wdl_doc,
                                           relative_to_path=wdl_path.parent):
             archive.write(str(abspath), str(relpath))
-    archive.testzip()
 
 
 if __name__ == "__main__":
