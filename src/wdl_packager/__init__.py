@@ -73,6 +73,19 @@ def wdl_paths(wdl: WDL.Tree.Document,
         raise NotImplementedError(f"{protocol} is not implemented yet")
 
     wdl_path = start_path / Path(uri)
+    if ".." in wdl_path.parts:
+        # If .. is in the path we have a problem. This can be fixed by
+        # resolving it. Since resolving is done relative to CWD and creates
+        # an absolute path we need to use relative_to to get back to a
+        # relative path.
+        try:
+            resolved_wdl_path = wdl_path.resolve().relative_to(
+                Path(os.getcwd()))
+        except ValueError:
+            # Resolve hack did not work
+            raise ValueError(f"'..' was found in the import path "
+                             f"'{wdl_path}' and could not be resolved.")
+        wdl_path = resolved_wdl_path
     path_list.append((Path(wdl.pos.abspath), wdl_path))
 
     # Recursively use the function for imports as well.
@@ -91,19 +104,6 @@ def wdl_paths(wdl: WDL.Tree.Document,
     unique_paths = set()
     unique_path_list = []
     for abspath, relpath in path_list:  # type: Path, Path
-        if ".." in relpath.parts:
-            # If .. is in the path we have a problem. This can be fixed by
-            # resolving it. Since resolving is done relative to CWD and creates
-            # an absolute path we need to use relative_to to get back to a
-            # relative path.
-            try:
-                resolved_relpath = relpath.resolve().relative_to(
-                    Path(os.getcwd()))
-            except ValueError:
-                # Resolve hack did not work
-                raise ValueError(f"'..' was found in the import path "
-                                 f"{relpath} and could not be resolved.")
-            relpath = resolved_relpath
         if relpath in unique_paths:
             continue
         else:
