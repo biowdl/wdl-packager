@@ -34,7 +34,7 @@ def argument_parser() -> argparse.ArgumentParser:
                         help="The WDL file that will be packaged.")
     parser.add_argument("-o", "--output", required=False,
                         help="The output zip file. By default uses the name "
-                             "of the input")
+                             "of the input.")
     return parser
 
 
@@ -109,10 +109,23 @@ def wdl_paths(wdl: WDL.Tree.Document,
 def main():
     args = argument_parser().parse_args()
     wdl_path = Path(args.wdl)
-    wdl_doc = WDL.load(args.wdl)
+
+    # If we load the wdl path with WDL.load it will use the path as base URI
+    # For example /home/user/workflows/workflow.wdl. All paths will be resolved
+    # relative to that. So all paths in the zip will start with
+    # /home/user/workflows. To work around this we go to the parent directory
+    # /home/user/workflows and we load the WDL there. We go back to the
+    # original cwd in the end, otherwise the output path does not make sense.
+    cwd = os.getcwd()
+    base_uri = wdl_path.name
+    os.chdir(wdl_path.parent)
+    wdl_doc = WDL.load(base_uri)
+    os.chdir(cwd)
+
     # Create the by default package /bla/bla/my_workflow.wdl into
     # my_workflow.zip
-    output_path = args.output or wdl_path.stem + ".zip"
+    output_path = args.output or wdl_path.stem + "_imports.zip"
+
     with zipfile.ZipFile(output_path, "w") as archive:
         for abspath, relpath in wdl_paths(wdl_doc):
             archive.write(str(abspath), str(relpath))
