@@ -22,7 +22,7 @@ import pytest
 
 from wdl_packager import get_protocol
 
-PROTOCOL_TEST=[
+PROTOCOL_TEST = [
     ("/bla/bla/bladiebla", None),
     ("http://github.com", "http"),
     ("file:///blabla/bla", "file"),
@@ -30,6 +30,6 @@ PROTOCOL_TEST=[
 ]
 
 
-@pytest.mark.parametrize(["uri","result"], PROTOCOL_TEST)
+@pytest.mark.parametrize(["uri", "result"], PROTOCOL_TEST)
 def test_get_protocol(uri, result):
     assert get_protocol(uri) == result
