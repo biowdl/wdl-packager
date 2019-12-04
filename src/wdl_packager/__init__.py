@@ -21,6 +21,7 @@
 import argparse
 import zipfile
 from pathlib import Path
+from typing import Generator, Optional, Tuple
 
 import WDL
 
@@ -35,10 +36,26 @@ def argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def get_protocol(uri: str) -> Optional[str]:
+    if "://" in uri:
+        return uri.split("://")[0]
+    else:
+        return None
+
+
+def wdl_paths(wdl: WDL.Tree.Document, start_path= Path()) -> Generator[Tuple[Path, Path], None, None]:
+    protocol = get_protocol(wdl.pos.uri)
+    if protocol == "file":
+        uri = wdl.pos.uri.lstrip("file://")
+    elif protocol is None:
+        uri = wdl.pos.uri
+    else:
+        raise NotImplementedError(f"{protocol} is not implemented yet")
+    rel_path = start_path / Path(uri).name
 def main():
     args = argument_parser().parse_args()
-    print(args)
-
+    wdl = WDL.load(args.wdl)
+    print(wdl)
 
 if __name__ == "__main__":
     main()
