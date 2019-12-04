@@ -18,10 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import os
+from pathlib import Path
+
 import pytest
 
-from wdl_packager import get_protocol
+from wdl_packager import get_protocol, wdl_paths
 
+import WDL
+
+TEST_DATA_DIR = Path(Path(__file__).parent) / Path("data")
 PROTOCOL_TEST = [
     ("/bla/bla/bladiebla", None),
     ("http://github.com", "http"),
@@ -33,3 +39,19 @@ PROTOCOL_TEST = [
 @pytest.mark.parametrize(["uri", "result"], PROTOCOL_TEST)
 def test_get_protocol(uri, result):
     assert get_protocol(uri) == result
+
+
+def test_wdl_paths():
+    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling") / Path("gatk-variantcalling.wdl")
+    os.chdir(wdl_file.parent)
+    wdl_doc = WDL.load(wdl_file.name)
+    relpaths = set(relpath for abspath, relpath in wdl_paths(wdl_doc))
+    assert relpaths == {
+        Path("gatk-variantcalling.wdl"),
+        Path("gvcf.wdl"),
+        Path("tasks/biopet/biopet.wdl"),
+        Path("tasks/common.wdl"),
+        Path("tasks/gatk.wdl"),
+        Path("tasks/picard.wdl"),
+        Path("tasks/samtools.wdl")
+    }
