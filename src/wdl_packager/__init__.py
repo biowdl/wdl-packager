@@ -153,10 +153,13 @@ def package_wdl(wdl_uri: str, output_zip: str):
 def main():
     args = argument_parser().parse_args()
 
+    # Make sure path to the wdl is resolved
+    wdl_path = Path(args.wdl).resolve()
+
     # Create the by default package /bla/bla/my_workflow.wdl into
     # my_workflow.zip
-    output_path = args.output or Path(args.wdl).stem + ".zip"
-    package_wdl(args.wdl, output_path)
+    output_path = args.output or Path(str(wdl_path)).stem + ".zip"
+    package_wdl(str(wdl_path), output_path)
 
 
 if __name__ == "__main__":
