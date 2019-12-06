@@ -130,29 +130,27 @@ def wdl_paths(wdl: WDL.Tree.Document,
     return unique_path_list
 
 
+def package_wdl(wdl_uri: str, output_zip: str):
+    wdl_doc = WDL.load(wdl_uri)
+    wdl_path = Path(wdl_uri)
+    with zipfile.ZipFile(output_zip, "w") as archive:
+        for abspath, relpath in wdl_paths(wdl_doc):
+            # If we load the wdl path with WDL.load it will use the path as
+            # base URI. For example /home/user/workflows/workflow.wdl. All
+            # paths will be resolved relative to that. So all paths in the zip
+            # will start with /home/user/workflows. We can resolve this by
+            # using relative_to.
+            zip_path = relpath.relative_to(wdl_path.parent)
+            archive.write(str(abspath), str(zip_path))
+
+
 def main():
     args = argument_parser().parse_args()
-    wdl_path = Path(args.wdl)
-
-    # If we load the wdl path with WDL.load it will use the path as base URI
-    # For example /home/user/workflows/workflow.wdl. All paths will be resolved
-    # relative to that. So all paths in the zip will start with
-    # /home/user/workflows. To work around this we go to the parent directory
-    # /home/user/workflows and we load the WDL there. We go back to the
-    # original cwd in the end, otherwise the output path does not make sense.
-    cwd = os.getcwd()
-    base_uri = wdl_path.name
-    os.chdir(wdl_path.parent)
-    wdl_doc = WDL.load(base_uri)
-    os.chdir(cwd)
 
     # Create the by default package /bla/bla/my_workflow.wdl into
     # my_workflow.zip
-    output_path = args.output or wdl_path.stem + "_imports.zip"
-
-    with zipfile.ZipFile(output_path, "w") as archive:
-        for abspath, relpath in wdl_paths(wdl_doc):
-            archive.write(str(abspath), str(relpath))
+    output_path = args.output or Path(args.wdl).stem + "_imports.zip"
+    package_wdl(args.wdl, output_path)
 
 
 if __name__ == "__main__":
