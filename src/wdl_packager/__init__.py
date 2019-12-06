@@ -155,7 +155,7 @@ def main():
 
     # Create the by default package /bla/bla/my_workflow.wdl into
     # my_workflow.zip
-    output_path = args.output or str(Path(args.wdl).with_suffix(".zip"))
+    output_path = args.output or Path(args.wdl).stem + ".zip"
     package_wdl(args.wdl, output_path)
 
 
