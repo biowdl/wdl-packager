@@ -93,6 +93,9 @@ def test_wdl_paths_unresolvable():
     assert e.match("../common.wdl")
 
 
+# TODO: wait for https://github.com/chanzuckerberg/miniwdl/pull/310 and new
+# version.
+@pytest.mark.xfail
 def test_wdl_paths_file_protocol():
     wdl_file = TEST_DATA_DIR / Path("file_import.wdl")
     os.chdir(wdl_file.parent)

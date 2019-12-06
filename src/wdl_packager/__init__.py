@@ -89,7 +89,9 @@ def wdl_paths(wdl: WDL.Tree.Document,
     # Only file protocol is supported
     protocol = get_protocol(wdl.pos.uri)
     if protocol == "file":
-        uri = wdl.pos.uri.lstrip("file://")
+        # Assume for now there is now host in the protocol string.
+        # https://en.wikipedia.org/wiki/File_URI_scheme
+        uri = wdl.pos.uri.lstrip("file:///")
     elif protocol is None:
         uri = wdl.pos.uri
     else:

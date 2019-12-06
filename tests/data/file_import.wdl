@@ -1,6 +1,6 @@
 version 1.0
 
-import "file://gatk-variantcalling/gatk-variantcalling.wdl" as variantcalling
+import "file:///gatk-variantcalling/gatk-variantcalling.wdl" as variantcalling
 
 task echo {
     input {
