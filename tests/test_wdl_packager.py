@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 import os
+import sys
 import tempfile
 import zipfile
 from pathlib import Path
@@ -27,6 +28,7 @@ import WDL
 
 import pytest
 
+import wdl_packager
 from wdl_packager import (get_protocol,
                           package_wdl,
                           resolve_path_naive,
@@ -127,3 +129,23 @@ def test_resolve_path_naive_unsolvable(uri):
     with pytest.raises(ValueError) as e:
         resolve_path_naive(uri)
     assert e.match("unknown parent")
+
+
+def test_main():
+    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
+                                    "gatk-variantcalling.wdl")
+    test_zip = tempfile.mktemp(".zip")
+    sys.argv = ["wdl-packager", "-o", test_zip, str(wdl_file)]
+    wdl_packager.main()
+    with zipfile.ZipFile(test_zip, "r") as wdl_zip:
+        wdl_zip.testzip()
+        zipped_files = {zip_info.filename for zip_info in wdl_zip.filelist}
+        assert zipped_files == {
+            "gatk-variantcalling.wdl",
+            "gvcf.wdl",
+            "tasks/biopet/biopet.wdl",
+            "tasks/common.wdl",
+            "tasks/gatk.wdl",
+            "tasks/picard.wdl",
+            "tasks/samtools.wdl"
+        }
