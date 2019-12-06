@@ -93,6 +93,13 @@ def test_wdl_paths_unresolvable():
     assert e.match("../common.wdl")
 
 
+def test_wdl_paths_file_protocol():
+    wdl_file = TEST_DATA_DIR / Path("file_import.wdl")
+    os.chdir(wdl_file.parent)
+    wdl_doc = WDL.load(wdl_file.name)
+    assert "gatk-variantcalling/gatk-variantcalling.wdl" in wdl_paths(wdl_doc)
+
+
 def test_package_wdl_unresolvable():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling", "tasks", "biopet",
                                     "biopet.wdl")
