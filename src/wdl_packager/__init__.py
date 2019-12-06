@@ -143,7 +143,7 @@ def package_wdl(wdl_uri: str, output_zip: str):
                 zip_path = relpath.relative_to(wdl_path.parent)
             except ValueError:
                 raise ValueError("Could not create import zip with sensible "
-                                 "paths. Are there parent file ('..') type"
+                                 "paths. Are there parent file ('..') type "
                                  "imports in the wdl?")
             archive.write(str(abspath), str(zip_path))
 

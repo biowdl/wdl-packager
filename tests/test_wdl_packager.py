@@ -19,13 +19,19 @@
 # SOFTWARE.
 
 import os
+import tempfile
+import zipfile
 from pathlib import Path
 
 import WDL
 
 import pytest
 
-from wdl_packager import get_protocol, resolve_path_naive, wdl_paths
+from wdl_packager import (get_protocol,
+                          package_wdl,
+                          resolve_path_naive,
+                          wdl_paths)
+
 TEST_DATA_DIR = Path(Path(__file__).parent, "data")
 PROTOCOL_TEST = [
     ("/bla/bla/bladiebla", None),
@@ -56,6 +62,25 @@ def test_wdl_paths():
     }
 
 
+def test_package_wdl():
+    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
+                                    "gatk-variantcalling.wdl")
+    output_zip = tempfile.mktemp(".zip")
+    package_wdl(str(wdl_file), output_zip)
+    with zipfile.ZipFile(output_zip, "r") as wdl_zip:
+        wdl_zip.testzip()
+        zipped_files = {zip_info.filename for zip_info in wdl_zip.filelist}
+        assert zipped_files == {
+            "gatk-variantcalling.wdl",
+            "gvcf.wdl",
+            "tasks/biopet/biopet.wdl",
+            "tasks/common.wdl",
+            "tasks/gatk.wdl",
+            "tasks/picard.wdl",
+            "tasks/samtools.wdl"
+        }
+
+
 def test_wdl_paths_unresolvable():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling", "tasks", "biopet",
                                     "biopet.wdl")
@@ -64,6 +89,17 @@ def test_wdl_paths_unresolvable():
     with pytest.raises(ValueError) as e:
         wdl_paths(wdl_doc)
     assert e.match("../common.wdl")
+
+
+def test_package_wdl_unresolvable():
+    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling", "tasks", "biopet",
+                                    "biopet.wdl")
+
+    with pytest.raises(ValueError) as e:
+        package_wdl(str(wdl_file), tempfile.mktemp(".zip"))
+    assert ("Could not create import zip with sensible "
+            "paths. Are there parent file ('..') type "
+            "imports in the wdl?") in str(e.value)
 
 
 DOTTED_URIS = [
