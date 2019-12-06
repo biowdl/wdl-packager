@@ -19,7 +19,6 @@
 # SOFTWARE.
 
 import argparse
-import os
 import zipfile
 from pathlib import Path
 from typing import List, Optional, Set, Tuple
@@ -100,7 +99,7 @@ def wdl_paths(wdl: WDL.Tree.Document,
         # If .. is in the path we have a problem. This can be fixed by
         # resolving it.
         wdl_path = resolve_path_naive(start_path / Path(uri))
-    except:
+    except ValueError:
         raise ValueError(f"'..' was found in the import path "
                          f"'{uri}' and could not be resolved.")
     path_list.append((Path(wdl.pos.abspath), wdl_path))

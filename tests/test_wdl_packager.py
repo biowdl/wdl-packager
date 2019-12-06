@@ -43,17 +43,16 @@ def test_get_protocol(uri, result):
 def test_wdl_paths():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
                                     "gatk-variantcalling.wdl")
-    os.chdir(wdl_file.parent)
-    wdl_doc = WDL.load(wdl_file.name)
+    wdl_doc = WDL.load(str(wdl_file))
     relpaths = set(relpath for abspath, relpath in wdl_paths(wdl_doc))
     assert relpaths == {
-        Path("gatk-variantcalling.wdl"),
-        Path("gvcf.wdl"),
-        Path("tasks/biopet/biopet.wdl"),
-        Path("tasks/common.wdl"),
-        Path("tasks/gatk.wdl"),
-        Path("tasks/picard.wdl"),
-        Path("tasks/samtools.wdl")
+        Path(wdl_file.parent, "gatk-variantcalling.wdl"),
+        Path(wdl_file.parent, "gvcf.wdl"),
+        Path(wdl_file.parent, "tasks/biopet/biopet.wdl"),
+        Path(wdl_file.parent, "tasks/common.wdl"),
+        Path(wdl_file.parent, "tasks/gatk.wdl"),
+        Path(wdl_file.parent, "tasks/picard.wdl"),
+        Path(wdl_file.parent, "tasks/samtools.wdl")
     }
 
 
