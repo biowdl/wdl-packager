@@ -19,8 +19,8 @@ wdl-packager
   :target: https://github.com/biowdl/wdl-packager/blob/master/LICENSE
   :alt:
 
-.. image:: https://travis-ci.org/biowdl/wdl-packager.svg?branch=develop
-  :target: https://travis-ci.org/biowdl/wdl-packager
+.. image:: https://travis-ci.com/biowdl/wdl-packager.svg?branch=develop
+  :target: https://travis-ci.com/biowdl/wdl-packager
   :alt:
 
 .. image:: https://codecov.io/gh/biowdl/wdl-packager/branch/develop/graph/badge.svg
