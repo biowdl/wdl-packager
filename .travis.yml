@@ -7,11 +7,7 @@ script:
     - tox -e $TOX_ENV
 matrix:
   include:
-    # TEST DOCS AND LINTING
-    # Use default python3 version here.
-    - env: TOX_ENV=docs
     - env: TOX_ENV=lint
-
     - python: 3.6
       env: TOX_ENV=py36
       after_success:
