@@ -22,7 +22,7 @@ import argparse
 import os
 import zipfile
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Set, Tuple
 
 import WDL
 
@@ -49,7 +49,7 @@ def get_protocol(uri: str) -> Optional[str]:
         return None
 
 
-def resolve_double_dots_in_uri(path: Path):
+def resolve_path_naive(path: Path):
     """
     Path.resolve() uses CWD on relative paths. But this is not desirable
     for uris
@@ -64,7 +64,7 @@ def resolve_double_dots_in_uri(path: Path):
             # Slice out the double dot and its parent.
             new_parts = path.parts[:index - 1] + path.parts[index + 1:]
             # Recursion which allows for checking multiple ".." parts.
-            return resolve_double_dots_in_uri(Path(*new_parts))
+            return resolve_path_naive(Path(*new_parts))
     else:
         return path
 
@@ -121,7 +121,7 @@ def wdl_paths(wdl: WDL.Tree.Document,
     # Make sure the list only contains unique entries. Some WDL files import
     # the same wdl file and this wdl file will end up in the list multiple
     # times because of that. This needs to be corrected.
-    unique_paths = set()
+    unique_paths = set()  # type: Set[Path]
     unique_path_list = []
     for abspath, relpath in path_list:  # type: Path, Path
         if relpath in unique_paths:
