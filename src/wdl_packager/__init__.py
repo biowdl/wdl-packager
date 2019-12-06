@@ -51,8 +51,12 @@ def get_protocol(uri: str) -> Optional[str]:
 
 def resolve_path_naive(path: Path):
     """
-    Path.resolve() uses CWD on relative paths. But this is not desirable
-    for uris
+    Path.resolve() uses CWD on relative paths. But this is not always
+    desirable. This function solves "my_path/my_dir/../my_file" naively
+    as "my_path/my_file". This is not correct if symlinks are involved so
+    this function should be used when a naive implementation is desirable.
+    :param path: The path to resolve
+    :return: A resolved path
     """
     if path.is_absolute():  # resolve works fine in this case.
         return path.resolve()
@@ -92,20 +96,13 @@ def wdl_paths(wdl: WDL.Tree.Document,
     else:
         raise NotImplementedError(f"{protocol} is not implemented yet")
 
-    wdl_path = start_path / Path(uri)
-    if ".." in wdl_path.parts:
+    try:
         # If .. is in the path we have a problem. This can be fixed by
-        # resolving it. Since resolving is done relative to CWD and creates
-        # an absolute path we need to use relative_to to get back to a
-        # relative path.
-        try:
-            resolved_wdl_path = wdl_path.resolve().relative_to(
-                Path(os.getcwd()))
-        except ValueError:
-            # Resolve hack did not work
-            raise ValueError(f"'..' was found in the import path "
-                             f"'{wdl_path}' and could not be resolved.")
-        wdl_path = resolved_wdl_path
+        # resolving it.
+        wdl_path = resolve_path_naive(start_path / Path(uri))
+    except:
+        raise ValueError(f"'..' was found in the import path "
+                         f"'{uri}' and could not be resolved.")
     path_list.append((Path(wdl.pos.abspath), wdl_path))
 
     # Recursively use the function for imports as well.
