@@ -139,7 +139,12 @@ def package_wdl(wdl_uri: str, output_zip: str):
             # paths will be resolved relative to that. So all paths in the zip
             # will start with /home/user/workflows. We can resolve this by
             # using relative_to.
-            zip_path = relpath.relative_to(wdl_path.parent)
+            try:
+                zip_path = relpath.relative_to(wdl_path.parent)
+            except ValueError:
+                raise ValueError("Could not create import zip with sensible "
+                                 "paths. Are there parent file ('..') type"
+                                 "imports in the wdl?")
             archive.write(str(abspath), str(zip_path))
 
 
