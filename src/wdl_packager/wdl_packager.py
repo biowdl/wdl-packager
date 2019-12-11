@@ -148,14 +148,14 @@ def main():
     # Make sure path to the wdl is resolved
     wdl_path = Path(args.wdl).resolve()
 
-    if args.use_timestamp or args.reproducable:
+    if args.use_timestamp or args.reproducible:
         timestamp = get_commit_timestamp(wdl_path.parent)
     else:
         timestamp = None
 
     if args.output is not None:
         output_path = args.output
-    elif args.use_git_name or args.reproducable:
+    elif args.use_git_name or args.reproducible:
         output_path = (wdl_path.stem + "_" +
                        get_commit_version(wdl_path.parent) +
                        ".zip")
