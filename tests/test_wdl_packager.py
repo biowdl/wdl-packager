@@ -32,7 +32,7 @@ from wdl_packager import (package_wdl,
                           wdl_packager,
                           wdl_paths,)
 
-from . import TEST_DATA_DIR
+from . import TEST_DATA_DIR, file_md5sum
 
 
 def test_wdl_paths():
@@ -119,3 +119,11 @@ def test_main():
             "tasks/picard.wdl",
             "tasks/samtools.wdl"
         }
+
+
+def test_package_wdl_reproducible():
+    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
+                                    "gatk-variantcalling.wdl")
+    test_zip = tempfile.mktemp(".zip")
+    package_wdl(str(wdl_file), test_zip, use_git_timestamp=True)
+    assert file_md5sum(Path(test_zip)) == "3af8446e27955c18bb40596b4f1ed430"

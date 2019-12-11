@@ -18,6 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import hashlib
 from pathlib import Path
 
 TEST_DATA_DIR = Path(Path(__file__).parent, "data")
+
+
+def file_md5sum(filepath: Path) -> str:
+    """
+    Generates a md5sum for a file. Reads file in blocks to save memory.
+    :param filepath: a pathlib. Path to the file
+    :return: a md5sum as hexadecimal string.
+    """
+    hasher = hashlib.md5()
+    with filepath.open('rb') as file_handler:  # Read the file in bytes
+        for block in iter(lambda: file_handler.read(8192), b''):
+            hasher.update(block)
+    return hasher.hexdigest()
