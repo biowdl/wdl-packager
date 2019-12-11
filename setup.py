@@ -51,7 +51,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            'wdl-packager=wdl_packager:main'
+            'wdl-packager=wdl_packager.wdl_packager:main'
         ]
     },
 )

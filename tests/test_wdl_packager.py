@@ -28,25 +28,12 @@ import WDL
 
 import pytest
 
-import wdl_packager
-from wdl_packager import (get_protocol,
-                          package_wdl,
-                          resolve_path_naive,
-                          wdl_paths)
+from wdl_packager import (package_wdl,
+                          wdl_paths,
+                          wdl_packager)
 
 from . import TEST_DATA_DIR
 
-PROTOCOL_TEST = [
-    ("/bla/bla/bladiebla", None),
-    ("http://github.com", "http"),
-    ("file:///blabla/bla", "file"),
-    ("sqlalchemy+psycopg2:///mydatabase?bla", "sqlalchemy+psycopg2")
-]
-
-
-@pytest.mark.parametrize(["uri", "result"], PROTOCOL_TEST)
-def test_get_protocol(uri, result):
-    assert get_protocol(uri) == result
 
 
 def test_wdl_paths():
@@ -113,33 +100,6 @@ def test_package_wdl_unresolvable():
     assert ("Could not create import zip with sensible "
             "paths. Are there parent file ('..') type "
             "imports in the wdl?") in str(e.value)
-
-
-DOTTED_URIS = [
-    (Path("bla/../bla"), Path("bla")),
-    (Path("/bla/../../../usr/lib"), Path("/usr/lib")),
-    (Path("my_wdl/tasks/biopet/../common.wdl"),
-     Path("my_wdl/tasks/common.wdl")),
-    (Path("multiple/../dots/../detected"), Path("detected")),
-]
-
-UNRESOLVABLE_DOTTED_URIS = [
-     Path("../my_import.wdl"),
-     Path("tasks/../../my_import.wdl"),
-     Path("seemingly/fine/../but/../too/many/dots/../../../../../indeed")
-]
-
-
-@pytest.mark.parametrize(["uri", "result"], DOTTED_URIS)
-def test_resolve_path_naive(uri, result):
-    assert resolve_path_naive(uri) == result
-
-
-@pytest.mark.parametrize("uri", UNRESOLVABLE_DOTTED_URIS)
-def test_resolve_path_naive_unsolvable(uri):
-    with pytest.raises(ValueError) as e:
-        resolve_path_naive(uri)
-    assert e.match("unknown parent")
 
 
 def test_main():
