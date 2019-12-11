@@ -22,7 +22,7 @@ import argparse
 import os
 import zipfile
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import List, Set, Tuple
 
 import WDL
 
@@ -92,9 +92,13 @@ def wdl_paths(wdl: WDL.Tree.Document,
 
 
 def package_wdl(wdl_uri: str, output_zip: str,
-                timestamp: Optional[int] = None):
+                use_git_timestamp: bool = False):
     wdl_doc = WDL.load(wdl_uri)
     wdl_path = Path(wdl_uri)
+    if use_git_timestamp:
+        timestamp = get_commit_timestamp(wdl_path.parent)
+    else:
+        timestamp = None
     tempfiles = []  # type: List[Path]
     with zipfile.ZipFile(output_zip, "w") as archive:
         for abspath, relpath in wdl_paths(wdl_doc):
@@ -148,11 +152,6 @@ def main():
     # Make sure path to the wdl is resolved
     wdl_path = Path(args.wdl).resolve()
 
-    if args.use_timestamp or args.reproducible:
-        timestamp = get_commit_timestamp(wdl_path.parent)
-    else:
-        timestamp = None
-
     if args.output is not None:
         output_path = args.output
     elif args.use_git_name or args.reproducible:
@@ -164,7 +163,9 @@ def main():
         # my_workflow.zip
         output_path = wdl_path.stem + ".zip"
 
-    package_wdl(str(wdl_path), output_path, timestamp)
+    package_wdl(str(wdl_path),
+                output_path,
+                use_git_timestamp=(args.use_timestamp or args.reproducible))
 
 
 if __name__ == "__main__":

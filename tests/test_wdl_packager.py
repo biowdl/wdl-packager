@@ -29,11 +29,10 @@ import WDL
 import pytest
 
 from wdl_packager import (package_wdl,
-                          wdl_paths,
-                          wdl_packager)
+                          wdl_packager,
+                          wdl_paths,)
 
 from . import TEST_DATA_DIR
-
 
 
 def test_wdl_paths():

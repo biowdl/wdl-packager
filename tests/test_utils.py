@@ -21,6 +21,7 @@
 import os
 import tempfile
 from pathlib import Path
+
 import pytest
 
 from wdl_packager.utils import create_timestamped_temp_copy, \
@@ -67,7 +68,7 @@ def test_resolve_path_naive_unsolvable(uri):
 
 
 def test_create_timestamped_tempfile():
-    timestamp=10
+    timestamp = 10
     temp_handle, temp_file = tempfile.mkstemp()
     timestamped_copy = create_timestamped_temp_copy(Path(temp_file), timestamp)
     assert timestamped_copy.stat().st_mtime == timestamp

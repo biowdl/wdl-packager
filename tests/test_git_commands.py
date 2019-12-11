@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from pathlib import Path
+
 from wdl_packager.git import get_commit_timestamp, get_commit_version
 
 from . import TEST_DATA_DIR
