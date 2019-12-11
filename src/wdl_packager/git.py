@@ -34,13 +34,14 @@ def git_command(repository: Path, *args) -> str:
     return results.stdout.decode()
 
 
-def get_commit_timestamp(repository: Path):
+def get_file_last_commit_timestamp(checked_in_file: Path):
     """
     Gets a commit unix timestamp from a repository
     :param repository: Path to the repository
     :return: An integer that is the unix timestamp
     """
-    return int(git_command(repository, "show", "-s", "--format=%at"))
+    return int(git_command(checked_in_file.parent,
+                           "log", "-n1", "--pretty=%at", str(checked_in_file)))
 
 
 def get_commit_version(repository: Path):

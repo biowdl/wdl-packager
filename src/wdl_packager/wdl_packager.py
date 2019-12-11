@@ -26,7 +26,7 @@ from typing import List, Set, Tuple
 
 import WDL
 
-from .git import get_commit_timestamp, get_commit_version
+from .git import get_file_last_commit_timestamp, get_commit_version
 from .utils import create_timestamped_temp_copy, get_protocol, \
     resolve_path_naive
 from .version import get_version
@@ -96,7 +96,7 @@ def package_wdl(wdl_uri: str, output_zip: str,
     wdl_doc = WDL.load(wdl_uri)
     wdl_path = Path(wdl_uri)
     if use_git_timestamp:
-        timestamp = get_commit_timestamp(wdl_path.parent)
+        timestamp = get_file_last_commit_timestamp(wdl_path.parent)
     else:
         timestamp = None
     tempfiles = []  # type: List[Path]
