@@ -34,7 +34,8 @@ from wdl_packager import (get_protocol,
                           resolve_path_naive,
                           wdl_paths)
 
-TEST_DATA_DIR = Path(Path(__file__).parent, "data")
+from . import TEST_DATA_DIR
+
 PROTOCOL_TEST = [
     ("/bla/bla/bladiebla", None),
     ("http://github.com", "http"),
