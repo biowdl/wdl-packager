@@ -26,6 +26,7 @@ from typing import List, Optional, Set, Tuple
 
 import WDL
 
+from .git import get_commit_timestamp, get_commit_version
 from .utils import create_timestamped_temp_copy, get_protocol, \
     resolve_path_naive
 from .version import get_version
@@ -127,9 +128,11 @@ def argument_parser() -> argparse.ArgumentParser:
                              "of the input. This overrides the git name "
                              "option.")
     parser.add_argument("--use-git-version-name", action="store_true",
+                        dest="use_git_name",
                         help="Use git describe to determine the name of the "
                              "zip.")
     parser.add_argument("--use-git-commit-timestamp", action="store_true",
+                        dest="use_timestamp",
                         help="Use the git commit timestamp to timestamp all "
                              "the files in the zip.")
     parser.add_argument("--reproducible", action="store_true",
@@ -145,10 +148,23 @@ def main():
     # Make sure path to the wdl is resolved
     wdl_path = Path(args.wdl).resolve()
 
-    # Create the by default package /bla/bla/my_workflow.wdl into
-    # my_workflow.zip
-    output_path = args.output or Path(str(wdl_path)).stem + ".zip"
-    package_wdl(str(wdl_path), output_path)
+    if args.use_timestamp or args.reproducable:
+        timestamp = get_commit_timestamp(wdl_path.parent)
+    else:
+        timestamp = None
+
+    if args.output is not None:
+        output_path = args.output
+    elif args.use_git_name or args.reproducable:
+        output_path = (wdl_path.stem + "_" +
+                       get_commit_version(wdl_path.parent) +
+                       ".zip")
+    else:
+        # Create the by default package /bla/bla/my_workflow.wdl into
+        # my_workflow.zip
+        output_path = wdl_path.stem + ".zip"
+
+    package_wdl(str(wdl_path), output_path, timestamp)
 
 
 if __name__ == "__main__":
