@@ -19,13 +19,15 @@
 # SOFTWARE.
 
 import argparse
+import os
 import zipfile
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 import WDL
 
-from .utils import get_protocol, resolve_path_naive
+from .utils import create_timestamped_temp_copy, get_protocol, \
+    resolve_path_naive
 from .version import get_version
 
 def argument_parser() -> argparse.ArgumentParser:
@@ -98,9 +100,11 @@ def wdl_paths(wdl: WDL.Tree.Document,
     return unique_path_list
 
 
-def package_wdl(wdl_uri: str, output_zip: str):
+def package_wdl(wdl_uri: str, output_zip: str,
+                timestamp: Optional[int] = None):
     wdl_doc = WDL.load(wdl_uri)
     wdl_path = Path(wdl_uri)
+    tempfiles = []  # type: List[Path]
     with zipfile.ZipFile(output_zip, "w") as archive:
         for abspath, relpath in wdl_paths(wdl_doc):
             # If we load the wdl path with WDL.load it will use the path as
@@ -114,7 +118,14 @@ def package_wdl(wdl_uri: str, output_zip: str):
                 raise ValueError("Could not create import zip with sensible "
                                  "paths. Are there parent file ('..') type "
                                  "imports in the wdl?")
-            archive.write(str(abspath), str(zip_path))
+            if timestamp is not None:
+                src_path = create_timestamped_temp_copy(abspath, timestamp)
+                tempfiles.append(src_path)
+            else:
+                src_path = abspath
+            archive.write(str(src_path), str(zip_path))
+    for temp in tempfiles:
+        os.remove(str(temp))
 
 
 def main():
