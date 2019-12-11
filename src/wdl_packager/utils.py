@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import os
+import tempfile
 from pathlib import Path
 from typing import Optional
 
@@ -56,3 +58,10 @@ def resolve_path_naive(path: Path):
             return resolve_path_naive(Path(*new_parts))
     else:
         return path
+
+
+def create_timestamped_temp_copy(original_file: Path, timestamp: int) -> Path:
+    temp_handle, temp_path = tempfile.mkstemp()
+    Path(temp_path).write_bytes(original_file.read_bytes())
+    os.utime(temp_path, (timestamp, timestamp))
+    return Path(temp_path)
