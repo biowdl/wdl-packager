@@ -30,16 +30,6 @@ from .utils import create_timestamped_temp_copy, get_protocol, \
     resolve_path_naive
 from .version import get_version
 
-def argument_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("wdl", metavar="WDL_FILE",
-                        help="The WDL file that will be packaged.")
-    parser.add_argument("-o", "--output", required=False,
-                        help="The output zip file. By default uses the name "
-                             "of the input.")
-    parser.add_argument('--version', action='version', version=get_version())
-    return parser
-
 
 def wdl_paths(wdl: WDL.Tree.Document,
               start_path: Path = Path(),
@@ -126,6 +116,27 @@ def package_wdl(wdl_uri: str, output_zip: str,
             archive.write(str(src_path), str(zip_path))
     for temp in tempfiles:
         os.remove(str(temp))
+
+
+def argument_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("wdl", metavar="WDL_FILE",
+                        help="The WDL file that will be packaged.")
+    parser.add_argument("-o", "--output", required=False,
+                        help="The output zip file. By default uses the name "
+                             "of the input. This overrides the git name "
+                             "option.")
+    parser.add_argument("--use-git-version-name", action="store_true",
+                        help="Use git describe to determine the name of the "
+                             "zip.")
+    parser.add_argument("--use-git-commit-timestamp", action="store_true",
+                        help="Use the git commit timestamp to timestamp all "
+                             "the files in the zip.")
+    parser.add_argument("--reproducible", action="store_true",
+                        help="shorthand for --use-git-version-name and "
+                             "--use-git-commit-timestamp")
+    parser.add_argument("--version", action="version", version=get_version())
+    return parser
 
 
 def main():
