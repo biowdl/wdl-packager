@@ -29,16 +29,14 @@ from .utils import create_zip_file, get_protocol, resolve_path_naive
 from .version import get_version
 
 
-def wdl_paths(wdl: WDL.Tree.Document,
-              start_path: Path = Path(),
-              unique: bool = True) -> List[Tuple[Path, Path]]:
+def _wdl_all_paths(wdl: WDL.Tree.Document,
+                   start_path: Path = Path()) -> List[Tuple[Path, Path]]:
     """
     Return a list of all WDL files that are imported. The list contains
     tuples of absolute path on the filesystem and relative paths from the
     URI of the first WDL document.
     :param wdl: The WDL document
     :param start_path: relative path to start from.
-    :param unique: Only return unique paths
     :return: A list of tuple(abspath, relpath)
     """
     path_list = []
@@ -67,52 +65,60 @@ def wdl_paths(wdl: WDL.Tree.Document,
     import_start_path = wdl_path.parent
     for wdl_import in wdl.imports:
         path_list.extend(
-            # Uniqueness checking not done for each recursion
-            wdl_paths(wdl_import.doc, import_start_path, unique=False))
+            _wdl_all_paths(wdl_import.doc, import_start_path))
+    return path_list
 
-    if not unique:
-        return path_list
+
+def wdl_paths(wdl_uri: str) -> List[Tuple[Path, Path]]:
+    wdl_doc = WDL.load(wdl_uri)
+    wdl_path = Path(wdl_uri)
 
     # Make sure the list only contains unique entries. Some WDL files import
     # the same wdl file and this wdl file will end up in the list multiple
     # times because of that. This needs to be corrected.
     unique_paths = set()  # type: Set[Path]
     unique_path_list = []
-    for abspath, relpath in path_list:  # type: Path, Path
-        if relpath in unique_paths:
+    for source, raw_destination in _wdl_all_paths(wdl_doc):  # type: Path, Path
+        try:
+            # If we load the wdl path with WDL.load it will use the path as
+            # base URI. For example /home/user/workflows/workflow.wdl. All
+            # paths will be resolved relative to that. So all paths in the zip
+            # will start with /home/user/workflows. We can resolve this by
+            # using relative_to.
+            destination = raw_destination.relative_to(wdl_path.parent)
+        except ValueError:  # Raised when path is not relative
+            raise ValueError("Could not create import zip with sensible "
+                             "paths. Are there parent file ('..') type "
+                             "imports in the wdl?")
+        if destination in unique_paths:
             continue
         else:
-            unique_paths.add(relpath)
-            unique_path_list.append((abspath, relpath))
+            unique_paths.add(destination)
+            unique_path_list.append((source, destination))
 
     return unique_path_list
 
 
-def package_wdl(wdl_uri: str, output_zip: str,
-                use_git_timestamp: bool = False,
-                additional_files: Optional[List[Tuple[Path, Path]]] = None):
-    wdl_doc = WDL.load(wdl_uri)
-    wdl_path = Path(wdl_uri)
-    zipfiles = []  # type: List[Tuple[Path, Path]]
-    for abspath, relpath in (wdl_paths(wdl_doc)):
-        # If we load the wdl path with WDL.load it will use the path as
-        # base URI. For example /home/user/workflows/workflow.wdl. All
-        # paths will be resolved relative to that. So all paths in the zip
-        # will start with /home/user/workflows. We can resolve this by
-        # using relative_to.
-        try:
-            zip_path = relpath.relative_to(wdl_path.parent)
-        except ValueError:
-            raise ValueError("Could not create import zip with sensible "
-                             "paths. Are there parent file ('..') type "
-                             "imports in the wdl?")
-        zipfiles.append((abspath, zip_path))
+def package_wdl(wdl_path: Path, output_zip: str,
+                use_git_timestamps: bool = False,
+                additional_files: Optional[List[Path]] = None):
+
+    zipfiles = wdl_paths(str(wdl_path))
 
     if additional_files is not None:
-        zipfiles.extend(additional_files)
+        for add_file in additional_files:
+            add_file_path = Path(add_file)
+            src = add_file_path.resolve()
+            try:
+                dest = src.relative_to(wdl_path.parent)
+            except ValueError:
+                # If not relative to the wdl we add it in the root of the zip
+                dest = Path(add_file_path.name)
+            zipfiles.append((src, dest))
+
     zipfiles.sort(key=lambda x: str(x[1]))
     create_zip_file(zipfiles, output_path=output_zip,
-                    use_git_timestamps=use_git_timestamp)
+                    use_git_timestamps=use_git_timestamps)
 
 
 def argument_parser() -> argparse.ArgumentParser:
@@ -124,6 +130,7 @@ def argument_parser() -> argparse.ArgumentParser:
                              "of the input. This overrides the git name "
                              "option.")
     parser.add_argument("--add", "--additional-file", required=False,
+                        type=Path,
                         action="append", dest="additional_files")
     parser.add_argument("--use-git-version-name", action="store_true",
                         dest="use_git_name",
@@ -145,15 +152,7 @@ def main():
 
     # Make sure path to the wdl is resolved
     wdl_path = Path(args.wdl).resolve()
-    additional_files = []
-    for add_file in args.additional_files:
-        add_file_path = Path(add_file)
-        src = add_file_path.absolute()
-        try:
-            dest = add_file_path.resolve().relative_to(wdl_path.parent)
-        except ValueError:
-            dest = Path(add_file_path.name)
-        additional_files.append((src, dest))
+
     if args.output is not None:
         output_path = args.output
     elif args.use_git_name or args.reproducible:
@@ -165,10 +164,10 @@ def main():
         # my_workflow.zip
         output_path = wdl_path.stem + ".zip"
 
-    package_wdl(str(wdl_path),
+    package_wdl(wdl_path,
                 output_path,
-                use_git_timestamp=(args.use_timestamp or args.reproducible),
-                additional_files=additional_files)
+                use_git_timestamps=(args.use_timestamp or args.reproducible),
+                additional_files=args.additional_files)
 
 
 if __name__ == "__main__":

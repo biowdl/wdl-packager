@@ -30,7 +30,7 @@ import pytest
 
 from wdl_packager import (package_wdl,
                           wdl_packager,
-                          wdl_paths,)
+                          _wdl_all_paths, )
 
 from . import TEST_DATA_DIR, file_md5sum
 
@@ -39,7 +39,7 @@ def test_wdl_paths():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
                                     "gatk-variantcalling.wdl")
     wdl_doc = WDL.load(str(wdl_file))
-    relpaths = set(relpath for abspath, relpath in wdl_paths(wdl_doc))
+    relpaths = set(relpath for abspath, relpath in _wdl_all_paths(wdl_doc))
     assert relpaths == {
         Path(wdl_file.parent, "gatk-variantcalling.wdl"),
         Path(wdl_file.parent, "gvcf.wdl"),
@@ -76,7 +76,7 @@ def test_wdl_paths_unresolvable():
     os.chdir(wdl_file.parent)
     wdl_doc = WDL.load(wdl_file.name)
     with pytest.raises(ValueError) as e:
-        wdl_paths(wdl_doc)
+        _wdl_all_paths(wdl_doc)
     assert e.match("../common.wdl")
 
 
@@ -87,7 +87,7 @@ def test_wdl_paths_file_protocol():
     wdl_file = TEST_DATA_DIR / Path("file_import.wdl")
     os.chdir(wdl_file.parent)
     wdl_doc = WDL.load(wdl_file.name)
-    assert "gatk-variantcalling/gatk-variantcalling.wdl" in wdl_paths(wdl_doc)
+    assert "gatk-variantcalling/gatk-variantcalling.wdl" in _wdl_all_paths(wdl_doc)
 
 
 def test_package_wdl_unresolvable():
@@ -125,5 +125,5 @@ def test_package_wdl_reproducible():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
                                     "gatk-variantcalling.wdl")
     test_zip = tempfile.mktemp(".zip")
-    package_wdl(str(wdl_file), test_zip, use_git_timestamp=True)
+    package_wdl(str(wdl_file), test_zip, use_git_timestamps=True)
     assert file_md5sum(Path(test_zip)) == "3af8446e27955c18bb40596b4f1ed430"
