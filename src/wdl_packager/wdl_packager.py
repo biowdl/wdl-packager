@@ -95,10 +95,6 @@ def package_wdl(wdl_uri: str, output_zip: str,
                 use_git_timestamp: bool = False):
     wdl_doc = WDL.load(wdl_uri)
     wdl_path = Path(wdl_uri)
-    if use_git_timestamp:
-        timestamp = get_file_last_commit_timestamp(wdl_path.parent)
-    else:
-        timestamp = None
     tempfiles = []  # type: List[Path]
     with zipfile.ZipFile(output_zip, "w") as archive:
         for abspath, relpath in wdl_paths(wdl_doc):
@@ -113,7 +109,8 @@ def package_wdl(wdl_uri: str, output_zip: str,
                 raise ValueError("Could not create import zip with sensible "
                                  "paths. Are there parent file ('..') type "
                                  "imports in the wdl?")
-            if timestamp is not None:
+            if use_git_timestamp:
+                timestamp = get_file_last_commit_timestamp(abspath)
                 src_path = create_timestamped_temp_copy(abspath, timestamp)
                 tempfiles.append(src_path)
             else:
