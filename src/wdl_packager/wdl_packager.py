@@ -19,16 +19,13 @@
 # SOFTWARE.
 
 import argparse
-import os
-import zipfile
 from pathlib import Path
 from typing import List, Optional, Set, Tuple
 
 import WDL
 
-from .git import get_file_last_commit_timestamp, get_commit_version
-from .utils import create_timestamped_temp_copy, get_protocol, \
-    resolve_path_naive
+from .git import get_commit_version
+from .utils import create_zip_file, get_protocol, resolve_path_naive
 from .version import get_version
 
 
@@ -94,33 +91,28 @@ def wdl_paths(wdl: WDL.Tree.Document,
 def package_wdl(wdl_uri: str, output_zip: str,
                 use_git_timestamp: bool = False,
                 additional_files: Optional[List[Tuple[Path, Path]]] = None):
-    if additional_files is None:
-        additional_files = []
     wdl_doc = WDL.load(wdl_uri)
     wdl_path = Path(wdl_uri)
-    tempfiles = []  # type: List[Path]
-    with zipfile.ZipFile(output_zip, "w") as archive:
-        for abspath, relpath in (wdl_paths(wdl_doc) + additional_files):
-            # If we load the wdl path with WDL.load it will use the path as
-            # base URI. For example /home/user/workflows/workflow.wdl. All
-            # paths will be resolved relative to that. So all paths in the zip
-            # will start with /home/user/workflows. We can resolve this by
-            # using relative_to.
-            try:
-                zip_path = relpath.relative_to(wdl_path.parent)
-            except ValueError:
-                raise ValueError("Could not create import zip with sensible "
-                                 "paths. Are there parent file ('..') type "
-                                 "imports in the wdl?")
-            if use_git_timestamp:
-                timestamp = get_file_last_commit_timestamp(abspath)
-                src_path = create_timestamped_temp_copy(abspath, timestamp)
-                tempfiles.append(src_path)
-            else:
-                src_path = abspath
-            archive.write(str(src_path), str(zip_path))
-    for temp in tempfiles:
-        os.remove(str(temp))
+    zipfiles = []  # type: List[Tuple[Path, Path]]
+    for abspath, relpath in (wdl_paths(wdl_doc)):
+        # If we load the wdl path with WDL.load it will use the path as
+        # base URI. For example /home/user/workflows/workflow.wdl. All
+        # paths will be resolved relative to that. So all paths in the zip
+        # will start with /home/user/workflows. We can resolve this by
+        # using relative_to.
+        try:
+            zip_path = relpath.relative_to(wdl_path.parent)
+        except ValueError:
+            raise ValueError("Could not create import zip with sensible "
+                             "paths. Are there parent file ('..') type "
+                             "imports in the wdl?")
+        zipfiles.append((abspath, zip_path))
+
+    if additional_files is not None:
+        zipfiles.extend(additional_files)
+    zipfiles.sort(key=lambda x: str(x[1]))
+    create_zip_file(zipfiles, output_path=output_zip,
+                    use_git_timestamps=use_git_timestamp)
 
 
 def argument_parser() -> argparse.ArgumentParser:
@@ -158,9 +150,9 @@ def main():
         add_file_path = Path(add_file)
         src = add_file_path.absolute()
         try:
-            dest = add_file_path.resolve().relative_to(wdl_path)
+            dest = add_file_path.resolve().relative_to(wdl_path.parent)
         except ValueError:
-            dest = add_file_path.name
+            dest = Path(add_file_path.name)
         additional_files.append((src, dest))
     if args.output is not None:
         output_path = args.output
