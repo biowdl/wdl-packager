@@ -22,18 +22,18 @@ from pathlib import Path
 
 import pytest
 
-from wdl_packager.git import get_file_last_commit_timestamp, get_commit_version
+from wdl_packager.git import get_commit_version, get_file_last_commit_timestamp
 
 from . import TEST_DATA_DIR
 
-TIMESTAMP_FILES= [
+TIMESTAMP_FILES = [
     (Path(TEST_DATA_DIR, "gatk-variantcalling"), 1575463943)
 ]
+
 
 @pytest.mark.parametrize(["repo_file", "result"], TIMESTAMP_FILES)
 def test_get_commit_timestamp(repo_file, result):
     assert get_file_last_commit_timestamp(repo_file) == result
-
 
 
 def test_get_commit_version():
