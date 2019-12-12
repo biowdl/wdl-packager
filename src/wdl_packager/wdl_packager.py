@@ -22,7 +22,7 @@ import argparse
 import os
 import zipfile
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 import WDL
 
@@ -92,12 +92,15 @@ def wdl_paths(wdl: WDL.Tree.Document,
 
 
 def package_wdl(wdl_uri: str, output_zip: str,
-                use_git_timestamp: bool = False):
+                use_git_timestamp: bool = False,
+                additional_files: Optional[List[Tuple[Path, Path]]] = None):
+    if additional_files is None:
+        additional_files = []
     wdl_doc = WDL.load(wdl_uri)
     wdl_path = Path(wdl_uri)
     tempfiles = []  # type: List[Path]
     with zipfile.ZipFile(output_zip, "w") as archive:
-        for abspath, relpath in wdl_paths(wdl_doc):
+        for abspath, relpath in (wdl_paths(wdl_doc) + additional_files):
             # If we load the wdl path with WDL.load it will use the path as
             # base URI. For example /home/user/workflows/workflow.wdl. All
             # paths will be resolved relative to that. So all paths in the zip
@@ -128,6 +131,8 @@ def argument_parser() -> argparse.ArgumentParser:
                         help="The output zip file. By default uses the name "
                              "of the input. This overrides the git name "
                              "option.")
+    parser.add_argument("--add", "--additional-file", required=False,
+                        action="append", dest="additional_files")
     parser.add_argument("--use-git-version-name", action="store_true",
                         dest="use_git_name",
                         help="Use git describe to determine the name of the "
@@ -148,7 +153,15 @@ def main():
 
     # Make sure path to the wdl is resolved
     wdl_path = Path(args.wdl).resolve()
-
+    additional_files = []
+    for add_file in args.additional_files:
+        add_file_path = Path(add_file)
+        src = add_file_path.absolute()
+        try:
+            dest = add_file_path.resolve().relative_to(wdl_path)
+        except ValueError:
+            dest = add_file_path.name
+        additional_files.append((src, dest))
     if args.output is not None:
         output_path = args.output
     elif args.use_git_name or args.reproducible:
@@ -162,7 +175,8 @@ def main():
 
     package_wdl(str(wdl_path),
                 output_path,
-                use_git_timestamp=(args.use_timestamp or args.reproducible))
+                use_git_timestamp=(args.use_timestamp or args.reproducible),
+                additional_files=additional_files)
 
 
 if __name__ == "__main__":
