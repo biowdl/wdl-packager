@@ -20,17 +20,18 @@
 
 import subprocess
 from pathlib import Path
+from typing import List
 
 
-def git_command(repository: Path, *args) -> str:
+def git_command(repository: Path, args: List[str]) -> str:
     """
     Run a git command in a repository. Crashes with a CalledProcessError
     :param repository: Path to the repository
     :param args: the rest of the git arguments
     :return: a string with the output
     """
-    results = subprocess.run(("git", "-C", str(repository)) + args,
-                             stdout=subprocess.PIPE, check=True)
+    arguments = ["git", "-C", str(repository)] + args
+    results = subprocess.run(arguments, stdout=subprocess.PIPE, check=True)
     return results.stdout.decode()
 
 
@@ -40,8 +41,9 @@ def get_file_last_commit_timestamp(checked_in_file: Path):
     :param repository: Path to the repository
     :return: An integer that is the unix timestamp
     """
-    return int(git_command(checked_in_file.parent,
-                           "log", "-n1", "--pretty=%at", str(checked_in_file)))
+    return int(git_command(
+        checked_in_file.parent,
+        ["log", "-n1", "--pretty=%at", checked_in_file.name]))
 
 
 def get_commit_version(repository: Path):
@@ -52,8 +54,8 @@ def get_commit_version(repository: Path):
     :return: A version string produced by git.
     """
     try:
-        version = git_command(repository, "describe").strip()
+        version = git_command(repository, ["describe"]).strip()
     except subprocess.CalledProcessError:
         # If it cannot be described fall back to the hash.
-        version = git_command(repository, "show", "-s", "--format=%h")
+        version = git_command(repository, ["show", "-s", "--format=%h"])
     return version

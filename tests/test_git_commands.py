@@ -27,7 +27,9 @@ from wdl_packager.git import get_commit_version, get_file_last_commit_timestamp
 from . import TEST_DATA_DIR
 
 TIMESTAMP_FILES = [
-    (Path(TEST_DATA_DIR, "gatk-variantcalling"), 1575463943)
+    (Path(TEST_DATA_DIR, "gatk-variantcalling"), 1575463943),
+    (Path(TEST_DATA_DIR, "gatk-variantcalling", "gatk-variantcalling.wdl"),
+     1574768480)
 ]
 
 
