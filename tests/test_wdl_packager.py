@@ -18,19 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import os
 import sys
 import tempfile
 import zipfile
 from pathlib import Path
 
-import WDL
-
 import pytest
 
 from wdl_packager import (package_wdl,
                           wdl_packager,
-                          _wdl_all_paths, )
+                          wdl_paths, )
 
 from . import TEST_DATA_DIR, file_md5sum
 
@@ -38,16 +35,16 @@ from . import TEST_DATA_DIR, file_md5sum
 def test_wdl_paths():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
                                     "gatk-variantcalling.wdl")
-    wdl_doc = WDL.load(str(wdl_file))
-    relpaths = set(relpath for abspath, relpath in _wdl_all_paths(wdl_doc))
+
+    relpaths = set(relpath for abspath, relpath in wdl_paths(str(wdl_file)))
     assert relpaths == {
-        Path(wdl_file.parent, "gatk-variantcalling.wdl"),
-        Path(wdl_file.parent, "gvcf.wdl"),
-        Path(wdl_file.parent, "tasks/biopet/biopet.wdl"),
-        Path(wdl_file.parent, "tasks/common.wdl"),
-        Path(wdl_file.parent, "tasks/gatk.wdl"),
-        Path(wdl_file.parent, "tasks/picard.wdl"),
-        Path(wdl_file.parent, "tasks/samtools.wdl")
+        Path("gatk-variantcalling.wdl"),
+        Path("gvcf.wdl"),
+        Path("tasks/biopet/biopet.wdl"),
+        Path("tasks/common.wdl"),
+        Path("tasks/gatk.wdl"),
+        Path("tasks/picard.wdl"),
+        Path("tasks/samtools.wdl")
     }
 
 
@@ -55,7 +52,7 @@ def test_package_wdl():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
                                     "gatk-variantcalling.wdl")
     output_zip = tempfile.mktemp(".zip")
-    package_wdl(str(wdl_file), output_zip)
+    package_wdl(wdl_file, output_zip)
     with zipfile.ZipFile(output_zip, "r") as wdl_zip:
         wdl_zip.testzip()
         zipped_files = {zip_info.filename for zip_info in wdl_zip.filelist}
@@ -73,11 +70,9 @@ def test_package_wdl():
 def test_wdl_paths_unresolvable():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling", "tasks", "biopet",
                                     "biopet.wdl")
-    os.chdir(wdl_file.parent)
-    wdl_doc = WDL.load(wdl_file.name)
     with pytest.raises(ValueError) as e:
-        _wdl_all_paths(wdl_doc)
-    assert e.match("../common.wdl")
+        wdl_paths(str(wdl_file))
+    assert e.match("type imports in the wdl?")
 
 
 # TODO: wait for https://github.com/chanzuckerberg/miniwdl/pull/310 and new
@@ -85,9 +80,8 @@ def test_wdl_paths_unresolvable():
 @pytest.mark.xfail
 def test_wdl_paths_file_protocol():
     wdl_file = TEST_DATA_DIR / Path("file_import.wdl")
-    os.chdir(wdl_file.parent)
-    wdl_doc = WDL.load(wdl_file.name)
-    assert "gatk-variantcalling/gatk-variantcalling.wdl" in _wdl_all_paths(wdl_doc)
+    assert "gatk-variantcalling/gatk-variantcalling.wdl" in \
+           wdl_paths(str(wdl_file))
 
 
 def test_package_wdl_unresolvable():
@@ -95,7 +89,7 @@ def test_package_wdl_unresolvable():
                                     "biopet.wdl")
 
     with pytest.raises(ValueError) as e:
-        package_wdl(str(wdl_file), tempfile.mktemp(".zip"))
+        package_wdl(wdl_file, tempfile.mktemp(".zip"))
     assert ("Could not create import zip with sensible "
             "paths. Are there parent file ('..') type "
             "imports in the wdl?") in str(e.value)
@@ -125,5 +119,5 @@ def test_package_wdl_reproducible():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
                                     "gatk-variantcalling.wdl")
     test_zip = tempfile.mktemp(".zip")
-    package_wdl(str(wdl_file), test_zip, use_git_timestamps=True)
-    assert file_md5sum(Path(test_zip)) == "3af8446e27955c18bb40596b4f1ed430"
+    package_wdl(wdl_file, test_zip, use_git_timestamps=True)
+    assert file_md5sum(Path(test_zip)) == "30acf24b748aa333eac0192caa8b93d5"

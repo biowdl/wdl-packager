@@ -116,6 +116,7 @@ def package_wdl(wdl_path: Path, output_zip: str,
                 dest = Path(add_file_path.name)
             zipfiles.append((src, dest))
 
+    # Sort on the zip paths for reproducibility
     zipfiles.sort(key=lambda x: str(x[1]))
     create_zip_file(zipfiles, output_path=output_zip,
                     use_git_timestamps=use_git_timestamps)
