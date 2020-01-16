@@ -4,7 +4,6 @@ install:
 dist: xenial
 python: 3.6  # Use the oldest supported version of python as default.
 script:
-    - locale
     - tox -e $TOX_ENV
 matrix:
   include:
