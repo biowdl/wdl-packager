@@ -20,6 +20,8 @@
 
 import argparse
 import os
+import time
+import warnings
 import zipfile
 from pathlib import Path
 from typing import List, Optional, Set, Tuple
@@ -105,6 +107,13 @@ def wdl_paths(wdl_uri: str) -> List[Tuple[Path, Path]]:
 def create_zip_file(src_dest_list: List[Tuple[Path, Path]],
                     output_path: str,
                     use_git_timestamps: bool = False):
+    if use_git_timestamps:
+        if time.tzname[0] != "UTC":
+            warnings.warn(f"Timezone '{time.tzname[0]}' is not 'UTC'. "
+                          f"Setting timezone to 'UTC' for reproducibility.")
+            os.environ["TZ"] = "UTC"
+            time.tzset()
+
     tempfiles = []
     with zipfile.ZipFile(output_path, "w") as archive:
         for src, dest in src_dest_list:
