@@ -116,6 +116,8 @@ def test_main():
 
 
 def test_package_wdl_reproducible():
+    """This test works perfectly in containers, but not so well in the user's
+    environment."""
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
                                     "gatk-variantcalling.wdl")
     test_zip = tempfile.mktemp(".zip")
