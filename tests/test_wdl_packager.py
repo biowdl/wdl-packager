@@ -120,4 +120,5 @@ def test_package_wdl_reproducible():
                                     "gatk-variantcalling.wdl")
     test_zip = tempfile.mktemp(".zip")
     package_wdl(wdl_file, test_zip, use_git_timestamps=True)
-    assert file_md5sum(Path(test_zip)) == "30acf24b748aa333eac0192caa8b93d5"
+    # Correct timestamp for UTC
+    assert file_md5sum(Path(test_zip)) == "c5456ebfc6f29a6226b3a9f2714a937f"
