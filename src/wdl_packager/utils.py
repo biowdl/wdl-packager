@@ -20,11 +20,8 @@
 
 import os
 import tempfile
-import zipfile
 from pathlib import Path
-from typing import List, Optional, Tuple
-
-from .git import get_file_last_commit_timestamp
+from typing import Optional
 
 
 def get_protocol(uri: str) -> Optional[str]:
@@ -68,20 +65,3 @@ def create_timestamped_temp_copy(original_file: Path, timestamp: int) -> Path:
     Path(temp_path).write_bytes(original_file.read_bytes())
     os.utime(temp_path, (timestamp, timestamp))
     return Path(temp_path)
-
-
-def create_zip_file(src_dest_list: List[Tuple[Path, Path]],
-                    output_path: str,
-                    use_git_timestamps: bool = False):
-    tempfiles = []
-    with zipfile.ZipFile(output_path, "w") as archive:
-        for src, dest in src_dest_list:
-            if use_git_timestamps:
-                timestamp = get_file_last_commit_timestamp(src)
-                src_path = create_timestamped_temp_copy(src, timestamp)
-                tempfiles.append(src_path)
-            else:
-                src_path = src
-            archive.write(str(src_path), str(dest))
-    for temp in tempfiles:
-        os.remove(str(temp))

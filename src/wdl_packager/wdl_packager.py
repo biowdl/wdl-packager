@@ -19,13 +19,16 @@
 # SOFTWARE.
 
 import argparse
+import os
+import zipfile
 from pathlib import Path
 from typing import List, Optional, Set, Tuple
 
 import WDL
 
-from .git import get_commit_version
-from .utils import create_zip_file, get_protocol, resolve_path_naive
+from .git import get_commit_version, get_file_last_commit_timestamp
+from .utils import create_timestamped_temp_copy, get_protocol, \
+    resolve_path_naive
 from .version import get_version
 
 
@@ -97,6 +100,23 @@ def wdl_paths(wdl_uri: str) -> List[Tuple[Path, Path]]:
             unique_path_list.append((source, destination))
 
     return unique_path_list
+
+
+def create_zip_file(src_dest_list: List[Tuple[Path, Path]],
+                    output_path: str,
+                    use_git_timestamps: bool = False):
+    tempfiles = []
+    with zipfile.ZipFile(output_path, "w") as archive:
+        for src, dest in src_dest_list:
+            if use_git_timestamps:
+                timestamp = get_file_last_commit_timestamp(src)
+                src_path = create_timestamped_temp_copy(src, timestamp)
+                tempfiles.append(src_path)
+            else:
+                src_path = src
+            archive.write(str(src_path), str(dest))
+    for temp in tempfiles:
+        os.remove(str(temp))
 
 
 def package_wdl(wdl_path: Path, output_zip: str,
