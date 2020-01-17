@@ -114,7 +114,9 @@ def create_zip_file(src_dest_list: List[Tuple[Path, Path]],
         if time.tzname[0] != "UTC":
             logging.warning(f"Timezone '{time.tzname[0]}' is not 'UTC'. "
                             f"Setting this process's timezone to 'UTC' for "
-                            f"reproducibility.")
+                            f"reproducibility. Set environment variable 'TZ' "
+                            f"to 'UTC' before running this program to disable "
+                            f"this warning.")
             os.environ["TZ"] = "UTC"
             time.tzset()
 

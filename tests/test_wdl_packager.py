@@ -136,6 +136,9 @@ def test_timezone_check(caplog):
     os.environ["TZ"] = "CET"
     time.tzset()
     package_wdl(wdl_file, test_zip, use_git_timestamps=True)
-    assert ("Timezone 'CET' is not 'UTC'. Setting this process's timezone to "
-            "'UTC' for reproducibility." in caplog.messages)
+    # Check if there is a message with Timezone etc. in it.
+    warnings = list(filter(
+        lambda x: "Timezone 'CET' is not 'UTC'." in x,
+        caplog.messages))
+    assert len(warnings) == 1
     os.remove(test_zip)
