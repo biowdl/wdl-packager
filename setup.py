@@ -32,7 +32,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/x-rst",
     license="MIT",
-    keywords="WDL zip",
+    keywords="WDL wdl zip package",
     zip_safe=False,
     packages=find_packages('src'),
     package_dir={'': 'src'},
