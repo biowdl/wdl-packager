@@ -88,6 +88,7 @@ def test_package_wdl_unresolvable():
             "paths. Are there parent file ('..') type "
             "imports in the wdl?") in str(e.value)
 
+
 def test_main():
     wdl_file = Path(TEST_DATA_DIR, "gatk-variantcalling",
                     "gatk-variantcalling.wdl")
