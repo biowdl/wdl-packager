@@ -82,7 +82,7 @@ The internal process to create a reproducible package is as follows:
   timestamp of the latest commit that affected that file.
 + Each file is then copied to a temporary directory where the last modified
   time is changed to the unix timestamp found in the first step.
-+ The list of files is then sorted by their destionation path in the zip. The
++ The list of files is then sorted by their destination path in the zip. The
   sorting ensures that the files will always be added in the same order.
 + The timezone of the process is changed to UTC, as the timezone affects the
   timestamp of the files in the zip archive.
