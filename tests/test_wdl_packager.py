@@ -117,9 +117,6 @@ def test_main():
     os.remove(test_zip)
 
 
-# Ignore timezone warning on this test as it is triggered on systems that do
-# not have their timezone set to UTC.
-@pytest.mark.filterwarnings("ignore:Timezone")
 def test_package_wdl_reproducible():
     """This test works perfectly in containers, but not so well in the user's
     environment."""
@@ -132,15 +129,13 @@ def test_package_wdl_reproducible():
     os.remove(test_zip)
 
 
-def test_timezone_check(recwarn):
+def test_timezone_check(caplog):
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
                                     "gatk-variantcalling.wdl")
     test_zip = tempfile.mktemp(".zip")
     os.environ["TZ"] = "CET"
     time.tzset()
     package_wdl(wdl_file, test_zip, use_git_timestamps=True)
-    assert len(recwarn) == 1
-    wrn = recwarn.pop(UserWarning)
-    assert issubclass(wrn.category, UserWarning)
-    assert "Timezone 'CET' is not 'UTC'." in str(wrn.message)
+    assert ("Timezone 'CET' is not 'UTC'. Setting this process's timezone to "
+            "'UTC' for reproducibility." in caplog.messages)
     os.remove(test_zip)

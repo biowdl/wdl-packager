@@ -19,9 +19,9 @@
 # SOFTWARE.
 
 import argparse
+import logging
 import os
 import time
-import warnings
 import zipfile
 from pathlib import Path
 from typing import List, Optional, Set, Tuple
@@ -112,9 +112,9 @@ def create_zip_file(src_dest_list: List[Tuple[Path, Path]],
                     use_git_timestamps: bool = False):
     if use_git_timestamps:
         if time.tzname[0] != "UTC":
-            warnings.warn(f"Timezone '{time.tzname[0]}' is not 'UTC'. "
-                          f"Setting this process's timezone to 'UTC' for "
-                          f"reproducibility.")
+            logging.warning(f"Timezone '{time.tzname[0]}' is not 'UTC'. "
+                            f"Setting this process's timezone to 'UTC' for "
+                            f"reproducibility.")
             os.environ["TZ"] = "UTC"
             time.tzset()
 
