@@ -165,7 +165,12 @@ def argument_parser() -> argparse.ArgumentParser:
                              "option.")
     parser.add_argument("-a", "--additional-file", required=False,
                         type=Path, action="append", dest="additional_files",
-                        help="Additional files to be included in the zip.")
+                        help="Additional files to be included in the zip. "
+                             "Additional files will be added according to "
+                             "their relative position to the WDL file. If "
+                             "that is not possible they will be added to the "
+                             "base of the zip. Multiple '-a' flags can be "
+                             "used.")
     parser.add_argument("--use-git-version-name", action="store_true",
                         dest="use_git_name",
                         help="Use git describe to determine the name of the "

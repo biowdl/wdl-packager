@@ -60,7 +60,11 @@ Usage
                             The output zip file. By default uses the name of the
                             input. This overrides the git name option.
       -a ADDITIONAL_FILES, --additional-file ADDITIONAL_FILES
-                            Additional files to be included in the zip.
+                            Additional files to be included in the zip. Additional
+                            files will be added according to their relative
+                            position to the WDL file. If that is not possible they
+                            will be added to the base of the zip. Multiple '-a'
+                            flags can be used.
       --use-git-version-name
                             Use git describe to determine the name of the zip.
       --use-git-commit-timestamp
