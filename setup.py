@@ -28,7 +28,7 @@ setup(
     version="1.0.0-dev",
     description="Package a WDL and its imports into a zip file.",
     author="Leiden University Medical Center",
-    author_email="sasc@lumc.nl",  # A placeholder for now
+    author_email="sasc@lumc.nl",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/x-rst",
     license="MIT",
