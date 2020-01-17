@@ -202,7 +202,3 @@ def main():
                 output_path,
                 use_git_timestamps=(args.use_timestamp or args.reproducible),
                 additional_files=args.additional_files)
-
-
-if __name__ == "__main__":
-    main()
