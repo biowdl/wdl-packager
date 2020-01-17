@@ -49,9 +49,12 @@ def _wdl_all_paths(wdl: WDL.Tree.Document,
     # Only file protocol is supported
     protocol = get_protocol(wdl.pos.uri)
     if protocol == "file":
-        # Assume for now there is now host in the protocol string.
-        # https://en.wikipedia.org/wiki/File_URI_scheme
-        uri = wdl.pos.uri.lstrip("file:///")
+        raise NotImplementedError("The 'file://' protocol is not usable for "
+                                  "building portable WDLs. It can not be used "
+                                  "in zips because zip paths are relative. "
+                                  "See: "
+                                  "https://github.com/openwdl/wdl/pull/349 "
+                                  "for more information.")
     elif protocol is None:
         uri = wdl.pos.uri
     else:

@@ -78,15 +78,6 @@ def test_wdl_paths_unresolvable():
     assert e.match("type imports in the wdl?")
 
 
-# TODO: wait for https://github.com/chanzuckerberg/miniwdl/pull/310 and new
-# version.
-@pytest.mark.xfail
-def test_wdl_paths_file_protocol():
-    wdl_file = TEST_DATA_DIR / Path("file_import.wdl")
-    assert "gatk-variantcalling/gatk-variantcalling.wdl" in \
-           wdl_paths(str(wdl_file))
-
-
 def test_package_wdl_unresolvable():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling", "tasks", "biopet",
                                     "biopet.wdl")
