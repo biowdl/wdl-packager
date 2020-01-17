@@ -18,8 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import os
 import sys
 import tempfile
+import time
 import zipfile
 from pathlib import Path
 
@@ -115,6 +117,9 @@ def test_main():
         }
 
 
+# Ignore timezone warning on this test as it is triggered on systems that do
+# not have their timezone set to UTC.
+@pytest.mark.filterwarnings("ignore:Timezone")
 def test_package_wdl_reproducible():
     """This test works perfectly in containers, but not so well in the user's
     environment."""
@@ -124,3 +129,16 @@ def test_package_wdl_reproducible():
     package_wdl(wdl_file, test_zip, use_git_timestamps=True)
     # Correct timestamp for UTC
     assert file_md5sum(Path(test_zip)) == "c5456ebfc6f29a6226b3a9f2714a937f"
+
+
+def test_timezone_check(recwarn):
+    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
+                                    "gatk-variantcalling.wdl")
+    test_zip = tempfile.mktemp(".zip")
+    os.environ["TZ"] = "CET"
+    time.tzset()
+    package_wdl(wdl_file, test_zip, use_git_timestamps=True)
+    assert len(recwarn) == 1
+    wrn = recwarn.pop(UserWarning)
+    assert issubclass(wrn.category, UserWarning)
+    assert "Timezone 'CET' is not 'UTC'." in str(wrn.message)

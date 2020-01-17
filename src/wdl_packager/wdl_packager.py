@@ -110,7 +110,8 @@ def create_zip_file(src_dest_list: List[Tuple[Path, Path]],
     if use_git_timestamps:
         if time.tzname[0] != "UTC":
             warnings.warn(f"Timezone '{time.tzname[0]}' is not 'UTC'. "
-                          f"Setting timezone to 'UTC' for reproducibility.")
+                          f"Setting this process's timezone to 'UTC' for "
+                          f"reproducibility.")
             os.environ["TZ"] = "UTC"
             time.tzset()
 
