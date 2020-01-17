@@ -67,6 +67,7 @@ def test_package_wdl():
             "tasks/picard.wdl",
             "tasks/samtools.wdl"
         }
+    os.remove(output_zip)
 
 
 def test_wdl_paths_unresolvable():
@@ -89,32 +90,39 @@ def test_wdl_paths_file_protocol():
 def test_package_wdl_unresolvable():
     wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling", "tasks", "biopet",
                                     "biopet.wdl")
-
+    test_zip = tempfile.mktemp(".zip")
     with pytest.raises(ValueError) as e:
-        package_wdl(wdl_file, tempfile.mktemp(".zip"))
+        package_wdl(wdl_file, test_zip)
     assert ("Could not create import zip with sensible "
             "paths. Are there parent file ('..') type "
             "imports in the wdl?") in str(e.value)
 
-
 def test_main():
-    wdl_file = TEST_DATA_DIR / Path("gatk-variantcalling",
-                                    "gatk-variantcalling.wdl")
+    wdl_file = Path(TEST_DATA_DIR, "gatk-variantcalling",
+                    "gatk-variantcalling.wdl")
+    # Add a LICENSE file to test additional file testing.
+    add_file = Path(TEST_DATA_DIR, "gatk-variantcalling", "tasks", "LICENSE")
+    # add a file outside the git repository
+    add_file2 = Path(TEST_DATA_DIR, "file_import.wdl")
     test_zip = tempfile.mktemp(".zip")
-    sys.argv = ["wdl-packager", "-o", test_zip, str(wdl_file)]
+    sys.argv = ["wdl-packager", "-o", test_zip, str(wdl_file),
+                "--add", str(add_file), "--add", str(add_file2)]
     wdl_packager.main()
     with zipfile.ZipFile(test_zip, "r") as wdl_zip:
         wdl_zip.testzip()
         zipped_files = {zip_info.filename for zip_info in wdl_zip.filelist}
         assert zipped_files == {
+            "file_import.wdl",
             "gatk-variantcalling.wdl",
             "gvcf.wdl",
             "tasks/biopet/biopet.wdl",
             "tasks/common.wdl",
             "tasks/gatk.wdl",
+            "tasks/LICENSE",
             "tasks/picard.wdl",
             "tasks/samtools.wdl"
         }
+    os.remove(test_zip)
 
 
 # Ignore timezone warning on this test as it is triggered on systems that do
@@ -129,6 +137,7 @@ def test_package_wdl_reproducible():
     package_wdl(wdl_file, test_zip, use_git_timestamps=True)
     # Correct timestamp for UTC
     assert file_md5sum(Path(test_zip)) == "c5456ebfc6f29a6226b3a9f2714a937f"
+    os.remove(test_zip)
 
 
 def test_timezone_check(recwarn):
@@ -142,3 +151,4 @@ def test_timezone_check(recwarn):
     wrn = recwarn.pop(UserWarning)
     assert issubclass(wrn.category, UserWarning)
     assert "Timezone 'CET' is not 'UTC'." in str(wrn.message)
+    os.remove(test_zip)
