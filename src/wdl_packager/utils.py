@@ -61,7 +61,7 @@ def resolve_path_naive(path: Path):
 
 
 def create_timestamped_temp_copy(original_file: Path, timestamp: int) -> Path:
-    temp_handle, temp_path = tempfile.mkstemp()
+    file_descriptor, temp_path = tempfile.mkstemp()
     Path(temp_path).write_bytes(original_file.read_bytes())
     os.utime(temp_path, (timestamp, timestamp))
     return Path(temp_path)
