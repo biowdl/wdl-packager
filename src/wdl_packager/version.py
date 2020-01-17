@@ -18,9 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .wdl_packager import package_wdl, wdl_paths
+import pkg_resources
 
-__all__ = [
-    "package_wdl",
-    "wdl_paths"
-]
+
+# Use a function here so it is only used when asked for.
+# pkg_resources is quite slow.
+def get_version() -> str:
+    """
+    Outputs the version string for this package
+    :return: A version string
+    """
+    return pkg_resources.get_distribution(__package__).version

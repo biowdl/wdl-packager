@@ -18,9 +18,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .wdl_packager import package_wdl, wdl_paths
+from pathlib import Path
 
-__all__ = [
-    "package_wdl",
-    "wdl_paths"
+import pytest
+
+from wdl_packager.git import get_commit_version, get_file_last_commit_timestamp
+
+from . import TEST_DATA_DIR
+
+TIMESTAMP_FILES = [
+    (Path(TEST_DATA_DIR, "gatk-variantcalling", "tasks", "gatk.wdl"),
+     1574753755),
+    (Path(TEST_DATA_DIR, "gatk-variantcalling", "gatk-variantcalling.wdl"),
+     1574768480)
 ]
+
+
+@pytest.mark.parametrize(["repo_file", "result"], TIMESTAMP_FILES)
+def test_get_commit_timestamp(repo_file, result):
+    assert get_file_last_commit_timestamp(repo_file) == result
+
+
+def test_get_commit_version():
+    assert get_commit_version(
+        Path(TEST_DATA_DIR, "gatk-variantcalling")) == "v1.0.0-1-g43b8475"
