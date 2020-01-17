@@ -97,7 +97,7 @@ def test_main():
     add_file2 = Path(TEST_DATA_DIR, "file_import.wdl")
     test_zip = tempfile.mktemp(".zip")
     sys.argv = ["wdl-packager", "-o", test_zip, str(wdl_file),
-                "--add", str(add_file), "--add", str(add_file2)]
+                "-a", str(add_file), "-a", str(add_file2)]
     wdl_packager.main()
     with zipfile.ZipFile(test_zip, "r") as wdl_zip:
         wdl_zip.testzip()

@@ -163,9 +163,9 @@ def argument_parser() -> argparse.ArgumentParser:
                         help="The output zip file. By default uses the name "
                              "of the input. This overrides the git name "
                              "option.")
-    parser.add_argument("--add", "--additional-file", required=False,
-                        type=Path,
-                        action="append", dest="additional_files")
+    parser.add_argument("-a", "--additional-file", required=False,
+                        type=Path, action="append", dest="additional_files",
+                        help="Additional files to be included in the zip.")
     parser.add_argument("--use-git-version-name", action="store_true",
                         dest="use_git_name",
                         help="Use git describe to determine the name of the "

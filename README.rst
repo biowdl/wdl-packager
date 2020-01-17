@@ -39,9 +39,12 @@ http urls in the future.
 Usage
 -----
 
-.. code-block::
+.. code-block:: text
 
-    usage: wdl-packager [-h] [-o OUTPUT] WDL_FILE
+    usage: wdl-packager [-h] [-o OUTPUT] [--add ADDITIONAL_FILES]
+                        [--use-git-version-name] [--use-git-commit-timestamp]
+                        [--reproducible] [--version]
+                        WDL_FILE
 
     positional arguments:
       WDL_FILE              The WDL file that will be packaged.
@@ -50,5 +53,13 @@ Usage
       -h, --help            show this help message and exit
       -o OUTPUT, --output OUTPUT
                             The output zip file. By default uses the name of the
-                            input.
-
+                            input. This overrides the git name option.
+      --add ADDITIONAL_FILES, --additional-file ADDITIONAL_FILES
+      --use-git-version-name
+                            Use git describe to determine the name of the zip.
+      --use-git-commit-timestamp
+                            Use the git commit timestamp to timestamp all the
+                            files in the zip.
+      --reproducible        shorthand for --use-git-version-name and --use-git-
+                            commit-timestamp
+      --version             show program's version number and exit
