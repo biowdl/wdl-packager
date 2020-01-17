@@ -48,14 +48,9 @@ def get_file_last_commit_timestamp(checked_in_file: Path):
 
 def get_commit_version(repository: Path):
     """
-    Produce a version string with git describe. If there are no names
-    use the shortened hash instead.
+    Produce a version string with git describe. --always flag is used to
+    always return a name.
     :param repository: Path to the repository
     :return: A version string produced by git.
     """
-    try:
-        version = git_command(repository, ["describe"]).strip()
-    except subprocess.CalledProcessError:
-        # If it cannot be described fall back to the hash.
-        version = git_command(repository, ["show", "-s", "--format=%h"])
-    return version
+    return git_command(repository, ["describe", "--always"]).strip()
