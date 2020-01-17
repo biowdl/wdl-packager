@@ -104,3 +104,9 @@ Known issues
   way that they can be used locally. Unfortunately this requires rewriting the
   import paths inside the WDL files before they are packaged. This is
   non-trivial to implement and it may have unintentioned side effects.
++ When packaging reproducibly the timezone of the python process needs to be
+  changed to 'UTC'. Otherwise the last modified times in the zip will differ
+  for each timezone. This will affect all code run in the same process. This
+  does not matter for wdl-packager itself, but it does matter for programs that
+  use wdl_packager as a library. Not using ``use_git_timestamps`` circumvents
+  this problem.
