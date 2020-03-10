@@ -25,7 +25,7 @@ with open("README.rst", "r") as readme_file:
 
 setup(
     name="wdl-packager",
-    version="1.0.0",
+    version="1.1.0-dev",
     description="Package a WDL and its imports into a zip file.",
     author="Leiden University Medical Center",
     author_email="sasc@lumc.nl",
