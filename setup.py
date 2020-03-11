@@ -47,7 +47,8 @@ setup(
     ],
     python_requires=">=3.6",  # Also needed for miniwdl
     install_requires=[
-       "miniwdl"
+       "miniwdl",
+       "setuptools"
     ],
     entry_points={
         "console_scripts": [
