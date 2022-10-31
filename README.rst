@@ -27,7 +27,12 @@ wdl-packager
   :target: https://codecov.io/gh/biowdl/wdl-packager
   :alt:
 
-Package a WDL and its imports into a zip file.
+Package a WDL and its imports into a zip file. This idea has since been ported to
+`miniwdl <https://github.com/chanzuckerberg/miniwdl>`_ and is now available as the 
+`miniwdl zip` command. Miniwdl zip packages reproducibly by default (no 
+``--reproducible`` flag needed) and does not require git for the reproducible 
+packaging to work correctly. As such miniwdl is the preferred option for 
+packaging WDL files.
 
 The zip file can be used as a valid imports zip for `cromwell
 <https://github.com/broadinstitute/cromwell>`_. It can also be used to archive
